@@ -1,0 +1,44 @@
+1.ClassPathXmlApplicationContext读取xml文件
+2.实现FactoryBean<?>接口，可以通过工厂模式新建?对象
+3.isSingleton()默认是true，单例对象。
+4.在xml中init-method="init"和destroy-method="destroy"可以配置初始化方法和销毁方法。
+5.bean的构造方法有很多种，都需要在xml中配置。
+	1.set注入：<property name="driver" value="com.mysql.jdbc.Driver"></property>
+		（set注入需要一个空的构造方法）
+	2.构造注入:<constructor-arg value="10" index="1" type="int"></constructor-arg>
+		(构造注入需要配对的构造方法)
+	3.配置文件注入:需要一个xxx.pro文件，里面写mysqlDriver=com.jdbc.mysql.Driver
+		然后xml中调用<util:properties id="pro" location="classpath:sql.pro"></util:properties>方法
+		最后value值="#{pro.mysqlDriver}"本质上只是在pro文件中读取值再调用set注入或者构造注入。
+	4.集合注入：本质上和set注入，不过是变量类型是一个集合。
+SpringMVC
+5.负责接收分发请求的类要加上@controller
+6.@RequestMapping("/")这东西似乎不要也行
+7.controller里面，如果返回的是一个ModleandView("xx",map)对象，它将会跳转到xx.jsp页面上，map里面是参数，对应${user} 
+8.不要尝试把*.do的.do去掉，去掉后重启服务器之后你连tomcat都打不开。。。
+9.通过@RequestMapping("doTest1/{id}")可以使用url传递参数
+10.@RequestMapping里面默认的是什么方式都可以接收(Post/Get)
+@GetMapping只能Get/@PostMapping只能Post
+@RequestMapping(value="doTest2",method={RequestMethod.POST,RequestMethod.GET})可以设置
+11.@ResponseBody//用于返回直接字符串，会直接在body中显示
+12.传入HttpServletRequest参数，可以通过getParameter("")获取控件的value值。
+13.也可以直接传入name同名的参数，如果不同名，使用注解@RequestParam("name") String name123,Integer age。
+14.你甚至可以通过自定义类来传参。对象中的属性都和form表单内标签的name一样。
+15.你还可以通过Map来接收参数，然后通过key来获取。
+16.你还能够获取Cookie、Accept、JSESSIONID等所有信息。
+17.以上所有操作都只是通过改变函数的形参来实现的，它们之间互不影响，所以可以混着用。
+
+MVC全名是Model View Controller，是软件工程中的一种软件架构模式，把软件系统分为三个 基本部分：模型(Model)、视图(View)和控制器(Controller)。
+Model处理数据，View显示数据并提供操作数据的按钮，Controller读取数据并传给Model。
+
+return "redirect:doTest2.do"可以重定向到doTest2函数。
+ * 重定向是浏览器端和服务器端有2次交互
+	 * 第一次是发送请求，服务器返回302状态码和新的url地址
+	 * 第二次是浏览器接受302，向新地址发送请求。
+
+不要@ResponseBody的时候return "ok";//可以返回到ok.jsp
+之所以是到ok.jsp，是再spring-configxml中设置中，同时还需要设置其前修正。
+<bean id="ViewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="prefix" value="/WEB-INF/jsp/"></property>
+		<property name="suffix" value=".jsp"></property>
+</bean>

@@ -1,0 +1,163 @@
+#Synchronized和lock的区别：
+
+(1) 首先synchronized是java内置关键字，在jvm层面，Lock是个java类；
+
+(2) synchronized无法判断是否获取锁的状态，Lock可以判断是否获取到锁；
+
+(3) synchronized会自动释放锁（Synchronized方法块结束以后释放），而Lock需在finally中手工释放锁（unlock()方法释放锁），否则容易造成线程死锁；
+
+(4) 用synchronized关键字的两个线程1和线程2，如果当前线程1获得锁，线程2线程等待。如果线程1阻塞，线程2则会一直等待下去，而Lock锁就不一定会等待下去，如果尝试获取不到锁，线程可以不用一直等待就结束了；
+
+(5) synchronized的锁可重入、不可中断、非公平，而Lock锁可重入、可中断、可公平（两者皆可）
+
+(6) Lock锁适合大量同步的代码的同步问题，synchronized锁适合代码少量的同步问题。
+https://www.cnblogs.com/iyyy/p/7993788.html
+
+#ReentrantLock(重入锁)功能详解
+
+1、ReentrantLock是独占锁且可重入的
+public class ReentrantLockTest {
+
+    public static void main(String[] args) throws InterruptedException {
+
+        ReentrantLock lock = new ReentrantLock();
+        for (int i = 1; i <= 3; i++) {
+            lock.lock();
+        }
+        for(int i=1;i<=3;i++){
+            try {
+            } finally {
+                lock.unlock();
+            }
+        }
+    }
+}
+2、ReentrantLock可以实现公平锁
+公平锁是指当锁可用时,在锁上等待时间最长的线程将获得锁的使用权。而非公平锁则随机分配这种使用权。和synchronized一样，默认的ReentrantLock实现是非公平锁,因为相比公平锁，非公平锁性能更好。当然公平锁能防止饥饿,某些情况下也很有用。在创建ReentrantLock的时候通过传进参数true创建公平锁,如果传入的是false或没传参数则创建的是非公平锁
+/*ReentrantLock lock = new ReentrantLock(true);*/
+
+3、ReentrantLock可响应中断
+当使用synchronized实现锁时,阻塞在锁上的线程除非获得锁否则将一直等待下去，也就是说这种无限等待获取锁的行为无法被中断。而ReentrantLock给我们提供了一个可以响应中断的获取锁的方法lockInterruptibly()。该方法可以用来解决死锁问题。
+public class ReentrantLockTest {
+    static Lock lock1 = new ReentrantLock();
+    static Lock lock2 = new ReentrantLock();
+    public static void main(String[] args) throws InterruptedException {
+
+        Thread thread = new Thread(new ThreadDemo(lock1, lock2));//该线程先获取锁1,再获取锁2
+        Thread thread1 = new Thread(new ThreadDemo(lock2, lock1));//该线程先获取锁2,再获取锁1
+        thread.start();
+        thread1.start();
+        thread.interrupt();//是第一个线程中断
+    }
+
+    static class ThreadDemo implements Runnable {
+        Lock firstLock;
+        Lock secondLock;
+        public ThreadDemo(Lock firstLock, Lock secondLock) {
+            this.firstLock = firstLock;
+            this.secondLock = secondLock;
+        }
+        @Override
+        public void run() {
+            try {
+                firstLock.lockInterruptibly();
+                TimeUnit.MILLISECONDS.sleep(10);//更好的触发死锁
+                secondLock.lockInterruptibly();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } finally {
+                firstLock.unlock();
+                secondLock.unlock();
+                System.out.println(Thread.currentThread().getName()+"正常结束!");
+            }
+        }
+    }
+}
+#lockInterruptibly方法允许其它线程调用等待线程的Thread.interrupt方法来中断等待线程的等待而直接返回，该过程无需获取锁，并抛出一个InterruptedException。
+4、获取锁时限时等待
+ReentrantLock还给我们提供了获取锁限时等待的方法tryLock(),可以选择传入时间参数,表示等待指定的时间,无参则表示立即返回锁申请的结果:true表示获取锁成功,false表示获取锁失败。我们可以使用该方法配合失败重试机制来更好的解决死锁问题。
+public class ReentrantLockTest {
+    static Lock lock1 = new ReentrantLock();
+    static Lock lock2 = new ReentrantLock();
+    public static void main(String[] args) throws InterruptedException {
+
+        Thread thread = new Thread(new ThreadDemo(lock1, lock2));//该线程先获取锁1,再获取锁2
+        Thread thread1 = new Thread(new ThreadDemo(lock2, lock1));//该线程先获取锁2,再获取锁1
+        thread.start();
+        thread1.start();
+    }
+
+    static class ThreadDemo implements Runnable {
+        Lock firstLock;
+        Lock secondLock;
+        public ThreadDemo(Lock firstLock, Lock secondLock) {
+            this.firstLock = firstLock;
+            this.secondLock = secondLock;
+        }
+        @Override
+        public void run() {
+            try {
+                while(!lock1.tryLock()){
+                    TimeUnit.MILLISECONDS.sleep(10);
+                }
+                while(!lock2.tryLock()){
+                    lock1.unlock();
+                    TimeUnit.MILLISECONDS.sleep(10);
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } finally {
+                firstLock.unlock();
+                secondLock.unlock();
+                System.out.println(Thread.currentThread().getName()+"正常结束!");
+            }
+        }
+    }
+}
+5、结合Condition实现等待通知机制
+使用synchronized结合Object上的wait和notify方法可以实现线程间的等待通知机制。ReentrantLock结合Condition接口同样可以实现这个功能。而且相比前者使用起来更清晰也更简单。
+
+#Condition由ReentrantLock对象创建,并且可以同时创建多个
+static Condition notEmpty = lock.newCondition();
+static Condition notFull = lock.newCondition();
+
+Condition接口在使用前必须先调用ReentrantLock的lock()方法获得锁。之后调用Condition接口的await()将释放锁,并且在该Condition上等待,直到有其他线程调用Condition的signal()方法唤醒线程。使用方式和wait,notify类似。
+
+public class MyBlockingQueue<E> {
+
+    int size;//阻塞队列最大容量
+    ReentrantLock lock = new ReentrantLock();
+    LinkedList<E> list=new LinkedList<>();//队列底层实现
+    Condition notFull = lock.newCondition();//队列满时的等待条件
+    Condition notEmpty = lock.newCondition();//队列空时的等待条件
+
+    public MyBlockingQueue(int size) {
+        this.size = size;
+    }
+    public void enqueue(E e) throws InterruptedException {//入列
+        lock.lock();
+        try {
+            while (list.size() ==size)//队列已满,在notFull条件上等待
+                notFull.await();
+            list.add(e);//入队:加入链表末尾
+            System.out.println("入队：" +e);
+            notEmpty.signal(); //通知在notEmpty条件上等待的线程
+        } finally {
+            lock.unlock();
+        }
+    }
+    public E dequeue() throws InterruptedException {//出列
+        E e;
+        lock.lock();
+        try {
+            while (list.size() == 0)//队列为空,在notEmpty条件上等待
+                notEmpty.await();
+            e = list.removeFirst();//出队:移除链表首元素
+            System.out.println("出队："+e);
+            notFull.signal();//通知在notFull条件上等待的线程
+            return e;
+        } finally {
+            lock.unlock();
+        }
+    }
+}

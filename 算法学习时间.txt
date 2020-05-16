@@ -1,0 +1,527 @@
+#五大算法设计思想
+	1、分治：
+		将一个难以直接解决的大问题，划分成一些规模较小的子问题，以便各个击破，分而治之。往往会选用递归来解决问题。
+		
+	2、动态规划：
+		动态规划法和分治法类似，它也是将大问题分解成子问题求解，不同的是，如果分解的子问题有很多是相同的，采用分治法相同的子问题会求解多次，是不是很影响效率；动态规划法呢，它会保存已解决的子问题的答案，再有相同的子问题直接用保存的答案就行了，节省了很多计算时间。
+		#适用于动态规划的问题必须满足最优化原理、无后效性和重叠性。
+		(1) 最优化原理（最优子结构性质）：一个最优化策略具有这样的性质，不论过去状态和决策如何，对前面的决策所形成的状态而言，余下的决策必须构成最优策略。简而言之，一个最优化策略的子策略总是最优的。一个问题满足最优化原理又称其具有最优子结构性质。
+		(2) 无后效性：将各阶段按照一定的次序排列好之后，对于某个给定的阶段状态，它以前各阶段的状态无法直接影响它未来的决策，而只能通过当前的这个状态。换句话说，每个状态都是过去历史的一个完整总结。这就是无后向性，又称无后效性。
+		(3) 子问题的重叠性：动态规划将原来具有指数级时间复杂度的搜索算法改进成了具有多项式时间复杂度的算法。其中的关键在于解决冗余，这就是动态规划算法的根本目的。动态规划实质上是一种以空间换时间的技术，它在实现的过程中，不得不存储产生过程中的各种状态，所以它的空间复杂度要大于其他算法。
+
+	3、贪心：
+		在对问题求解时，总是做出在当前看来是最好的选择。也就是说，不从整体最优上加以考虑，他所做出的仅是在某种意义上的局部最优解。贪心算法没有固定的算法框架，算法设计的关键是贪心策略的选择。必须注意的是，贪心算法不是对所有问题都能得到整体最优解，选择的贪心策略必须具备无后效性，即某个状态以后的过程不会影响以前的状态，只与当前状态有关。所以对所采用的贪心策略一定要仔细分析其是否满足无后效性。
+		
+	4、回溯
+		回溯算法实际上一个类似枚举的搜索尝试过程，主要是在搜索尝试过程中寻找问题的解，当发现已不满足求解条件时，就“回溯”返回，尝试别的路径。
+		回溯法是一种选优搜索法，按选优条件向前搜索，以达到目标。但当探索到某一步时，发现原先选择并不优或达不到目标，就退回一步重新选择，这种走不通就退回再走的技术为回溯法，而满足回溯条件的某个状态的点称为“回溯点”。
+		许多复杂的，规模较大的问题都可以使用回溯法，有“通用解题方法”的美称。
+
+	5、分支界限
+		类似于回溯法，也是一种在问题的解空间树T上搜索问题解的算法。但在一般情况下，分支限界法与回溯法的求解目标不同。回溯法的求解目标是找出T中满足约束条件的所有解，而分支限界法的求解目标则是找出满足约束条件的一个解，或是在满足约束条件的解中找出使某一目标函数值达到极大或极小的解，即在某种意义下的最优解。
+	参考资料：https://blog.csdn.net/ght886/article/details/80289142?depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromBaidu-6&utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromBaidu-6
+
+1、KMP子串查找算法：
+	在查找子字符串的过程中，朴素算法总是会右移一位。
+	public int searchStr(char[] cs1,char []cs2)
+	{
+		int i=0;
+		int j=0;
+		while(i<cs1.length&&j<cs2.length)
+		{
+			
+			
+			if(cs1[i]==cs2[j])
+			{
+				i++;
+				j++;
+			}
+			else 
+			{
+				i = i-j+ 1;
+				j=0;
+			}
+
+		}
+		if(j>=cs2.length)
+		{
+			return i-cs2.length+1;
+		}
+		return -1;
+	}
+	朴素算法的时间复杂度是O(m*n),空间复杂度O(1)
+	kmp算法的思想是，比对过的不必重复比较。它额外花费n个空间来存储next；
+	next表示当前元素的前x个元素与字符串的开头是匹配的。
+	比如ABABC的next是[0,0,0,1,2]
+	在发生不匹配时，就可以通过next来找到后续的比较对象了。
+	KMP的复杂度是O(m+n),空间复杂度O(n)
+	//计算next
+	int [] getNext(char[] str)
+	{
+		int[] result=new int[str.length];
+		result[0]=0;
+		result[1]=0;
+		int start=0;
+		for(int i=2;i<result.length;i++)
+		{
+			if(str[i-1]==str[start])
+			{
+				result[i]=result[i-1]+1;
+				start++;
+			}
+			else 
+			{
+				result[i]=0;
+				start=0;
+			}
+		}
+	}
+	//查找字符串位置
+	int searchStr(char[] cs1,char []cs2)
+	{
+		int []next=getNext(cs2);
+		int i=0;
+		int j=0;
+		while(i<cs1.length&&j<cs2.length)
+		{
+			
+			if(cs1[i]==cs2[j])
+			{
+				i++;
+				j++;
+			}
+			else 
+			{
+				if(j==0)
+					i++;
+				j=next[j];
+			}
+
+		}
+		if(j>=cs2.length)
+		{
+			return i-cs2.length+1;
+		}
+		return -1;
+	}
+	#进一步优化：对next数组，还可以进一步的优化。
+	因为kmp算法会对子串进行回退。假如：
+	A	B	C	D	A	B	D
+	0   0   0   0   0   1   2
+	第二个B如果不匹配，会回退到1的位置，1的位置还是一个B，那定然也不会匹配。所以事实上这一次比对是多余的。
+	我们可以进一步优化得:
+	A	B	C	D	A	B	D
+	0   0   0   0   0   0   2
+	int [] getNext(char[] str)
+	{
+		int[] result=new int[str.length];
+		result[0]=0;
+		result[1]=0;
+		int start=0;
+		int end=0;
+		for(int i=2;i<result.length;i++)
+		{
+			if(str[i-1]==str[start])
+			{
+				end++;
+				int temp=end;
+				while(str[temp]==str[i])
+				{
+					temp=result[temp];
+					
+				}
+				result[i]=temp;
+				start++;
+			}
+			else 
+			{
+				result[i]=0;
+				start=0;
+				end=0;
+			}
+		}
+		return result;
+	}
+	参考资料：https://segmentfault.com/a/1190000008575379	
+2、背包问题(动态规划)
+	/**
+	 * 01背包问题：
+	 * 	有多个不同的物品，可放入背包之中。每一个物品只能放一次。求最大价值。
+	 * 	比如：
+	 * 	有编号分别为a,b,c,d,e的五件物品，它们的重量分别是2,2,6,5,4，
+	 * 	它们的价值分别是6,3,5,4,6，每件物品数量只有一个，现在给你个承重为10的背包，
+	 * 	如何让背包里装入的物品具有最大的价值总和？
+	 */
+	public static int 零一背包(int []value,int []weight,int c)
+	{	
+		/*
+		 * max[m][n]表示可放入的物品数为m、背包容量为n时，最大价值的总和。
+		 *	可见：max[i][0]=0
+		 *  且：max[0][j]=weight[0]<j?weight[0]:0
+		 *     max[i][j]=MAX{max[i-1][j-weight[i]]+value[i],max[i-1][j]}
+		 */
+		int num=value.length;//物品的数量
+		int max[][]=new int [num][c+1];
+		for(int j=0;j<=c;j++)
+		{
+			if(weight[0]<=j)
+				max[0][j]=value[0];
+			
+			System.out.print(max[0][j]+" ");
+		}
+		System.out.println();
+		for(int i=1;i<num;i++)
+		{
+			for(int j=0;j<=c;j++)
+			{
+				int put=0;
+				if(j>=weight[i])
+					put=max[i-1][j-weight[i]]+value[i];
+				int noput=max[i-1][j];
+				max[i][j]=put>noput?put:noput;
+				System.out.print(max[i][j]+" ");
+			}
+			System.out.println();
+		}
+		return max[num-1][c];
+	}
+	/**
+	 * 完全背包问题：
+	 * 	有多种不同的物品，可放入背包之中。每一个物品可以放多次。求最大价值。
+	 * 	比如：
+	 *	有编号分别为a,b,c,d的四件物品，它们的重量分别是2,3,4,7，
+	 *	它们的价值分别是1,3,5,9，每件物品数量无限个，现在给你个承重为10的背包，
+	 *	如何让背包里装入的物品具有最大的价值总和？
+	 */
+	public static int 完全背包(int []value,int []weight,int c)
+	{	
+		/*
+		 * max[m][n]表示可放入的物品种类为m、背包容量为n时，最大价值的总和。
+		 *	可见：max[i][0]=0
+		 *  且：max[0][j]=weight[1]<j?max[0][j-weight[0]]+value[0]:0
+		 *     max[i][j]=MAX{max[i][j-weight[i]]+value[i],max[i-1][j]}
+		 *  ！注意：放入之后还能继续放入，所以是max[i][j-weight[i]]+value[i]
+		 */
+		int num=value.length;//物品的数量
+		int max[][]=new int [num][c+1];
+		for(int j=0;j<=c;j++)
+		{
+			if(weight[0]>j)
+				max[0][j]=0;
+			else
+				max[0][j]=max[0][j-weight[0]]+value[0];
+			
+			System.out.print(max[0][j]+" ");
+		}
+		System.out.println();
+		for(int i=1;i<num;i++)
+		{
+			for(int j=0;j<=c;j++)
+			{
+				int put=0;
+				if(j>=weight[i])
+					put=max[i][j-weight[i]]+value[i];
+				int noput=max[i-1][j];
+				max[i][j]=put>noput?put:noput;
+				System.out.print(max[i][j]+" ");
+			}
+			System.out.println();
+		}
+		return max[num-1][c];
+	}
+	/**
+	 * 多重背包问题：
+	 * 	有多种不同的物品，每个物品具有一定数目，可放入背包之中。求最大价值。
+	 * 	多重背包中每个物品的个数都是给定的，可能不是一个，绝对不是无限个。
+	 * 	比如：
+	 *	有编号分别为a,b,c的三件物品，
+	 *	它们的重量分别是1，2，2，
+	 *	它们的价值分别是6，10，20，
+	 *	他们的数目分别是10，5，2，
+	 *	现在给你个承重为 8 的背包，
+	 *	如何让背包里装入的物品具有最大的价值总和？
+	 */
+	public static int 多重背包1(int []value,int []weight,int []num,int c)
+	{	
+		/*
+		 * 思路1
+		 * 将多种物品转化成为多个物品。并采用01背包算法解决问题。
+		 */
+		int total=0;
+		for(int i=0;i<num.length;i++)
+		{
+			total+=num[i];
+		}
+		int []newValue=new int[total];
+		int []newWeight=new int[total];
+		int j=0;
+		for(int i=0;i<num.length;i++)
+		{
+			int last=num[i];
+			while(last--!=0)
+			{
+				newValue[j]=value[i];
+				newWeight[j]=weight[i];
+				j++;
+			}
+
+		}
+		return 零一背包(newValue,newWeight,c);
+	}
+	
+	public static int 多重背包2(int []value,int []weight,int []num,int c)
+	{	
+		/*
+		 * 思路2
+		 * max[m][n]表示可放入的物品数为m、背包容量为n时，最大价值的总和。
+		 * k表示放入的数量。
+		 *	可见：max[i][0]=0
+		 *
+		 *  且：
+		 *     max[0][j]=value[0]*weight[0]*MIN{num[0],j/weight[0]}
+		 *     max[i][j]=MAX{max[i-1][j-k*weight[i]]+value[i]*k}
+		 *     其中0<=k<=MIN{num[i],j/weight[i]}
+		 */
+		int num0=value.length;
+		int [][]max=new int[num0][c+1];
+		for(int j=0;j<=c;j++)
+		{
+			int min=j/weight[0];
+			if(min>num[0])
+				min=num[0];
+			max[0][j]=value[0]*weight[0]*min;
+			System.out.print(max[0][j]+" ");
+		}
+		System.out.println();
+		for(int i=1;i<num0;i++)
+		{
+			for(int j=0;j<=c;j++)
+			{
+				int max0=0;
+				int min=j/weight[i];
+				if(min>num[i])
+					min=num[i];
+				for(int k=0;k<=min;k++)
+				{
+					int temp=max[i-1][j-k*weight[i]]+value[i]*k;
+					if(max0<=temp)
+						max0=temp;
+				}
+				max[i][j]=max0;
+				System.out.print(max[i][j]+" ");
+			}
+			System.out.println();
+		}
+		return max[num0-1][c];	
+	}
+	参考资料：https://blog.csdn.net/na_beginning/article/details/62884939
+	
+	#笔试问题
+	/**
+	 * 笔试问题：
+	 * 假如游戏中提供自动拾取功能。如何才能拾取最大价值的装备。
+	 * 输入：
+	 * 	背包容量
+	 * 	地面道具重量
+	 * 	地面道具价值
+	 * 返回：
+	 * 	最大价值的拾取装备列表。
+	 */
+	public static class Item
+	{
+		int weight;
+		int value;
+		Item(int weight,int value)
+		{
+			this.weight=weight;
+			this.value=value;
+		}
+		@Override
+		public String toString() {
+			return "Item [weight=" + weight + ", value=" + value + "]";
+		}
+		
+	}
+	public static class ItemList
+	{
+		int value;
+		List<Item> list;
+		ItemList()
+		{
+			value=0;
+			list=new ArrayList<>();
+		}
+		void add(Item item)
+		{
+			list.add(item);
+			value+=item.value;
+		}
+		void add(ItemList itemList)
+		{
+			for(int i=0;i<itemList.list.size();i++)
+			{
+				this.add(itemList.list.get(i));
+			}
+			
+		}
+		@Override
+		public String toString() {
+			return "ItemList [value=" + value + ", list=" + list + "]";
+		}
+		
+	}
+	public static ItemList autoPickUp(int c,Item []items)
+	{
+		ItemList [][]maxBackpack=new ItemList[items.length][c+1];
+		for(int i=0;i<items.length;i++)
+		{
+			for(int j=0;j<=c;j++)
+			{
+				maxBackpack[i][j]=new ItemList();
+			}
+			
+		}
+		for(int j=0;j<=c;j++)
+		{
+			if(j>=items[0].weight)
+				maxBackpack[0][j].add(items[0]);
+			System.out.print(maxBackpack[0][j].value+" ");
+		}
+		System.out.println();
+		for(int i=1;i<items.length;i++)
+		{
+			for(int j=0;j<=c;j++)
+			{
+				ItemList max =maxBackpack[i-1][j];
+				if(j>=items[i].weight)
+					if(maxBackpack[i-1][j-items[i].weight].value+items[i].value>max.value)
+					{
+						max=maxBackpack[i-1][j-items[i].weight];
+						maxBackpack[i][j].add(items[i]);
+					}
+				maxBackpack[i][j].add(max);
+				System.out.print(maxBackpack[i][j].value+" ");
+			}
+			System.out.println();
+		}
+		return maxBackpack[items.length-1][c];
+	}
+3、小船过河(贪心)
+	public static int MAXBoatNeed(int []weight,int load)
+	{
+		/*
+		 * 属于贪心算法
+		 * 先排序
+		 * 然后将最小值与最大值合并
+		 * 如果合并值超出，则大的独自一艘船
+		 */
+		Arrays.sort(weight);
+		int length=weight.length;
+		int result=0;
+		int start=0;
+		int end=length-1;
+		while(start<end)
+		{
+			if(weight[start]+weight[end]>load)
+			{
+				end--;
+				result++;
+			}
+			else
+			{
+				start++;
+				end--;
+				result++;
+			}
+		}
+		if(start==end)
+			result++;//还剩一个落单的
+		return result;
+	}
+4、25匹马比赛，只有5条赛道，怎么样快速赛出速度最快的N匹马。
+	#1、首先分5组比赛5次，决出5组的第一名
+
+	(ABCDE)决出  小组内名次如下
+
+	A1   A2   A3   A4   A5
+
+	B1   B2    B3   B4   B5
+
+	C1   C2   C3   C4   C5
+
+	D1   D2  D3   D4   D5
+
+	E1    E2   E3    E4   E5
+
+
+
+	#2、使用ABCDE五组的第一名进行一场比赛 （A1 B1 C1 D1 E1），排出次序
+
+		 第六次此次得到了速度最快的一匹马（假设A1）
+
+	#3、使用（A2 B1 A3 B2 C1）进行比赛
+
+		第七次此次得到第二名和第三名（需要考虑的因素：A组的第二名可能会比B组的第一名速度更快
+
+		 A3 和 B2可能会比C组的第一名更快）
+
+	#4、按照此思路继续，第八次即可得到第四名；以此类推
+	
+5、如何用两个栈实现一个队列
+将栈分为左栈和右栈。一开始左栈右栈都为空。
+放入元素时，直接往左栈里放。
+去除元素时，首先判断右栈里是否存在元素，如果是，就将右边栈顶出栈。
+否则，将左栈元素全部出栈，并依次放入右栈中。
+
+6、如何判断链表是否有环
+#当路程无限时，跑得稍快的人一定会追上跑得稍慢的人。
+方法一：使用快慢指针————定义两个指针，同时从链表的头节点出发，一个指针一次走一步，另一个指针一次走两步。如果走得快的指针追上了走得慢的指针，那么链表就是环形链表；如果走得快的指针走到了链表的末尾（next指向 NULL）都没有追上第一个指针，那么链表就不是环形链表。
+方法二：使用set记录————如果不考虑空间复杂度，可以使用一个set记录走过的节点，当遇到第一个在set中存在的节点时，就说明回到了出发点，即链表有环，同时也找到了环的入口。
+
+7、如何判断有环链表的环入口位置
+<1> 定义两个指针p1和p2，在初始化时都指向链表的头节点。 
+<2> 如果链表中的环有n个节点，指针p1先在链表上向前移动n步。 
+<3> 然后指针p1和p2以相同的速度在链表上向前移动直到它们相遇。 
+<4> 它们相遇的节点就是环的入口节点。 
+那么如何得到环中的节点数目？
+可使用快慢指针的方法，即通过一快一慢两个指针来解决这个问题。当两个指针相遇时，表明链表中存在环。两个指针相遇的节点一定是在环中。可以从这个节点出发，一边继续向前移动一边计数，当再次回到这个节点时，即可得到环中的节点数了。
+
+#原理：假如入环口为第k个节点，环有n个节点。那么，当慢指针移动k个节点以后，刚好处在慢节点中，此时快指针走过k+n各节点。由于n是环节点数，所以走了n步后又回到了k的位置，此时两者相遇，证明此处为入环点。
+参考资料：https://www.cnblogs.com/xiaodi914/p/5795096.html
+
+8、如何判断链表是否相交
+#如果两个单链表有共同的节点，那么从第一个共同节点开始，后面的节点都会重叠，直到链表结束。呈“Y”字形。
+<1>使用栈
+我们可以从头遍历两个链表。创建两个栈，第一个栈存储第一个链表的节点，第二个栈存储第二个链表的节点。每遍历到一个节点时，就将该节点入栈。两个链表都入栈结束后。则通过top判断栈顶的节点是否相等即可判断两个单链表是否相交。因为我们知道，若两个链表相交，则从第一个相交节点开始，后面的节点都相交。
+若两链表相交，则循环出栈，直到遇到两个出栈的节点不相同，则这个节点的后一个节点就是第一个相交的节点。
+<2>遍历链表记录长度
+同时遍历两个链表到尾部，同时记录两个链表的长度。若两个链表最后的一个节点相同，则两个链表相交。
+有两个链表的长度后，我们就可以知道哪个链表长，设较长的链表长度为len1,短的链表长度为len2。
+则先让较长的链表向后移动(len1-len2)个长度。(即把长链表多出来的部分去掉)
+然后开始从当前位置同时遍历两个链表，当遍历到的链表的节点相同时，则这个节点就是第一个相交的节点。
+<3>哈希记录
+遍历第一个链表，并把每一个节点都记录在set中。然后从头遍历第二个节点，并判断每个节点是否包含在set内。如果包含，则证明相交，第一个包含点即交点。
+<4>将问题转化为判断一个链表是否有环问题
+先遍历第一个链表到它的尾部，然后将尾部的next指针指向第二个链表(尾部指针的next本来指向的是null)。这样两个链表就合成了一个链表。若该链表有环，则原两个链表一定相交。否则，不相交。
+
+#此外，如果两个带有环的链表相交，则这两个链表的环肯定是同一个环。
+参考资料：https://blog.csdn.net/fengxinlinux/article/details/78885764
+
+9、如何将链表逆序
+Node p1 = head;
+Node p2 = head.next;
+Node p3 =null;
+while(p2!=null){
+	p3 = p2.next;
+	p2.next= p1;
+	p1 = p2;
+	p2 = p3;
+}
+head.next=null;
+head = p1;
+10、TopK问题的两种解决思路
+思路1：插入排序
+思路2：小根堆构建
+思路3：快速选择
+https://www.cnblogs.com/en-heng/p/6336625.html
+

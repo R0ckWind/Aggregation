@@ -1,0 +1,102 @@
+drop database bank;
+create database bank;
+use bank;
+
+CREATE TABLE member(
+	email char(30)  PRIMARY KEY,
+	userName char(20),
+	password char(80),	
+	sex tinyint(1) default 1,
+	trueName char(20),
+	sfz char(30),
+	mobile char(11)
+	)ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+insert into member values('a@163.com','LiMei','123','0','李美','44123123123123','13922312132');
+insert into member values('b@163.com','XuYa','123','0','徐雅','44123123123123','13022312888');
+insert into member values('aa@163.com','ZhangSF','123','1','张三丰','44123123123123','13922312777');
+
+CREATE TABLE card(
+	cardID char(50) primary key,
+	cardPwd char(6),
+	mEmail char(30),
+	bankName char(50),
+	balance double
+	)ENGINE=MyISAM DEFAULT CHARSET=utf8;
+insert into card values('62282110001','123456','a@163.com','农业银行', '998');
+insert into card values('62282110002','123456','a@163.com','农业银行', '666');
+insert into card values('62282110003','123456','a@163.com','农业银行', '661');
+insert into card values('62282110004','123456','a@163.com','农业银行', '632');
+insert into card values('62282110005','123456','a@163.com','农业银行', '123');
+insert into card values('62282110006','123456','a@163.com','农业银行', '32');
+insert into card values('62282110007','123456','a@163.com','农业银行', '61');
+insert into card values('62282110008','123456','a@163.com','农业银行', '6326');
+insert into card values('62282110009','123456','a@163.com','农业银行', '1266');
+insert into card values('62282110010','123456','a@163.com','农业银行', '6236');
+insert into card values('622700102938','123456','aa@163.com','建设银行', '38');
+CREATE TABLE record(
+	id INT primary key auto_increment,
+	recordID char(50),
+	cardID char(50),
+	cardID2 char(50),
+	exchange double,
+	currentBalance double,
+	time datetime
+	)ENGINE=MyISAM DEFAULT CHARSET=utf8;
+insert into record values(null,20190413001,'62282110001','62282110002','1000',0,current_timestamp());
+insert into record values(null,20190413001,'62282110002','62282110001','-1000',0,current_timestamp());
+#用于查看银行卡是否受到系统支持
+create TABLE bankBin(
+	bin char(6) primary key,
+	bankName char(50)
+)ENGINE=MyISAM DEFAULT CHARSET=utf8;
+insert into bankBin values('622575','招商银行');
+insert into bankBin values('622576','招商银行');
+insert into bankBin values('622577','招商银行');
+insert into bankBin values('622578','招商银行');
+insert into bankBin values('622579','招商银行');
+insert into bankBin values('622580','招商银行');
+insert into bankBin values('622581','招商银行');
+insert into bankBin values('622582','招商银行');
+insert into bankBin values('622588','招商银行');
+insert into bankBin values('622598','招商银行');
+insert into bankBin values('622630','华夏银行');
+insert into bankBin values('622631','华夏银行');
+insert into bankBin values('622632','华夏银行');
+insert into bankBin values('622633','华夏银行');
+insert into bankBin values('622700','建设银行');
+insert into bankBin values('622725','建设银行');
+insert into bankBin values('622728','建设银行');
+insert into bankBin values('622821','农业银行');
+insert into bankBin values('622822','农业银行');
+insert into bankBin values('622823','农业银行');
+insert into bankBin values('622824','农业银行');
+insert into bankBin values('622825','农业银行');
+insert into bankBin values('622826','农业银行');
+insert into bankBin values('622836','农业银行');
+insert into bankBin values('622837','农业银行');
+insert into bankBin values('622840','农业银行');
+insert into bankBin values('622844','农业银行');
+insert into bankBin values('622845','农业银行');
+insert into bankBin values('622846','农业银行');
+insert into bankBin values('622847','农业银行');
+insert into bankBin values('622848','农业银行');
+#用于储存为发出去的消息
+create TABLE transferMsg(
+	msgID INT primary key auto_increment,
+	emailFrom  char(20),
+	emailTo char(20),
+	cardTo char(50),
+	exchange double
+)ENGINE=MyISAM DEFAULT CHARSET=utf8;
+#用于查看银行卡信息
+CREATE VIEW cardView
+(email,userName,trueName,mobile,cardID,cardPwd,bankName,balance)
+AS Select email,userName,trueName,mobile,cardID,cardPwd,bankName,balance
+from member,card
+where member.email=card.mEmail;
+#用于查看银行卡流水
+CREATE VIEW recordView(id,recordID,cardID,userName1,trueName1,cardID2,userName2,trueName2,exchange,time,currentBalance)
+AS Select record.id,record.recordID,ac.cardID,a.userName,a.trueName,bc.cardID,b.userName,b.trueName,record.exchange,time,record.currentBalance
+from record,card ac,card bc,member a,member b
+where record.cardID=ac.cardID and record.cardID2=bc.cardID and a.email=ac.mEmail and b.email=bc.mEmail;	

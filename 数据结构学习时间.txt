@@ -1,0 +1,348 @@
+排序算法：
+排序算法的稳定性：假定在待排序的记录序列中，存在多个具有相同的关键字的记录，若经过排序，这些记录的相对次序保持不变，即在原序列中，r[i]=r[j]，且r[i]在r[j]之前，而在排序后的序列中，r[i]仍在r[j]之前，则称这种排序算法是稳定的；否则称为不稳定的。
+
+插入排序：依次将待排序序列中的每一个记录插入到一个已排好的序列之中，直到所有记录都排好序。当序列基本有序时，插入排序的效率会更高。时间复杂度为O(n2)。这是一种稳定的排序方法。
+	/**
+	 * 插入排序
+	 * 思想：向一个空数组中插入数据
+	 * 时间复杂度：O(n^2)
+	 * 是否稳定：稳定
+	 * */
+	public static void 插入排序()
+	{
+		int []arr=getArr();
+		for(int i=1;i<length;i++)
+		{
+			int temp=arr[i];
+			int j;
+			for(j=i-1;j>=0&&temp<arr[j];j--)
+			{
+				arr[j+1]=arr[j];
+			}
+			arr[j+1]=temp;
+		}
+		printArr(arr);	
+	}
+
+希尔排序：希尔排序是插入排序的进化版，它的思路是将排序序列分成多段，来进行插入排序，分段的方法是间隔选取，然后将间隔逐步缩小直到间隔=1，那样，每进行一轮插入排序，要排序列都会更加接近于有序序列，使得每一次插入排序都接近于最好的情况。从代码上看，希尔排序拥有三个循环，但时间复杂度却处在O(n2)和O(nlog2 N)之间，这是一种不稳定的排序方法。
+/**
+	 * 希尔排序
+	 * 思想：
+	 * 选择一个增量d作为间隔。令d=n/2
+	 * 根据d将数组分为若干的子分组，分别对其进行插入排序。
+	 * 然后逐渐减小增量的大小，令d=d/2，重复上一步操作，直到d=1为止。
+	 * 时间复杂度：O(n2)和O(nlog2 N)之间
+	 * 是否稳定：不稳定
+	 */
+	public static void 希尔排序(){
+		int []arr=getArr();
+		int d=length/2;
+		while(d>=1)
+		{
+			for(int i=d;i<length;i++)
+			{	
+				int j;
+				int temp=arr[i];
+				for(j=i-d;j>=0&&temp<arr[j];j-=d)
+				{
+					arr[j+d]=arr[j];
+				}
+				arr[j+d]=temp;
+			}
+			d/=2;
+		}
+		printArr(arr);
+	}
+
+冒泡排序：思路是，每次比较相邻两个元素，将较大的元素向序列的后端移动，并且记录下发生最后一次交换的位置，那么，发生交换之后的所有元素可以肯定都是有序的，下次遍历的截止点就可以定在这个最后发生交换的位置。而当一次检索过后，却没有发生任何一次交换，那就意味着这个序列是完全有序的了。时间复杂度是O(n2)这是一种稳定的排序方法。
+/**
+	 * 冒泡排序
+	 * 思想：
+	 * 对数组相邻两元素进行逐一对比，并根据条件进行数据交换，使更大的整体向右方移动。
+	 * 时间复杂度：O(n2)
+	 * 是否稳定：稳定
+	 */
+	public static void 冒泡排序简单版()
+	{
+		int []arr=getArr();
+	
+		for(int i=0;i<length;i++)
+			for(int j=0;j<length-1-i;j++)
+			{
+				if(arr[j]>arr[j+1])
+				{
+					int temp=arr[j];
+					arr[j]=arr[j+1];
+					arr[j+1]=temp;					
+				}			
+			}
+		printArr(arr);	
+	}
+	public static void 冒泡排序优化版()
+	{
+		int []arr=getArr();
+		int exchange=length-1;
+		int pos=exchange;
+		while(exchange>0)
+		{
+			exchange=-1;
+			int i;
+			for(i=0;i<pos;i++)
+			{
+				if(arr[i]>arr[i+1])
+				{
+					int temp=arr[i];
+					arr[i]=arr[i+1];
+					arr[i+1]=temp;					
+					exchange=i;
+				}			
+			}
+			pos=exchange;
+		}
+		printArr(arr);	
+	}
+
+快速排序：在序列中设定一个轴值，并将序列分为两个部分，一个部分小于或等于轴值，另一部分大于轴值。目的是为了增大一次移动的距离从而减少移动的次数。一次这样的操作完成了以后，序列的前一部分一定会小于后一部分，这时候再进行递归操作，使得序列中的每一个部分都进行分割，直到所有的部分都只剩下一个元素为止。
+快速排序的时间复杂度是O(nlog2 N),不稳定。
+/**
+	 * 快速排序
+	 * 思想：
+	 * 从数列中挑出一个元素，称为 “基准”（pivot）。
+	 * 重新排序数列，所有元素比基准值小的摆放在基准前面，所有元素比基准值大的摆在基准的后面。
+	 * 这个称为分区操作。
+	 * 递归地把小于基准值元素的子数列和大于基准值元素的子数列进行分区，直到所有元素都有序为止。
+	 * 时间复杂度：O(nlog2 N)
+	 * 是否稳定：不稳定
+	 */
+	public static int 分区(int[] arr,int start,int end)
+	{
+		int i=start;
+		int j=end;
+		while(i<j)
+		{
+			while(i<j&&arr[i]<=arr[j])
+			{
+				j--;
+			}
+			if(i<j)
+			{
+				int temp=arr[i];
+				arr[i]=arr[j];
+				arr[j]=temp;
+				i++;
+			}
+			while(i<j&&arr[i]<=arr[j])
+			{
+				i++;
+			}
+			if(i<j)
+			{
+				int temp=arr[i];
+				arr[i]=arr[j];
+				arr[j]=temp;
+				j--;
+			}
+		}
+		return i;
+	}
+	public static void 快速排序(int[]arr,int start,int end)
+	{
+		if(start>=end) return;
+		int i=分区(arr,start,end);
+		快速排序(arr,0,i-1);
+		快速排序(arr,i+1,end);
+	}
+	public static void 快速排序()
+	{
+		int []arr=getArr();
+		快速排序(arr,0,length-1);
+		printArr(arr);
+	}
+
+简单选择排序：每一次从序列中选择一个最小的元素与序列的头部交换，之后将交换后的序列移除头部，重复以上步骤，直到只剩下一个元素。该算法的交换次数较少，时间复杂度时O(n2),是一种不稳定的排序方法。
+/**
+	 * 简单选择排序
+	 * 思想：每一次从序列中选择一个最小的元素与序列的头部交换。
+	 * 之后将交换后的序列移除头部，重复以上步骤，直到只剩下一个元素。
+	 * 时间复杂度：O(n^2)
+	 * 是否稳定：不稳定
+	 */
+	public static void 简单选择排序()
+	{
+		int[]arr=getArr();
+		for(int i=0;i<length-1;i++)
+		{
+			int min_index=i;
+			for(int j=i+1;j<length;j++)
+			{
+				if(arr[j]<arr[min_index])
+					min_index=j; 
+			}
+			if(min_index!=i)
+			{
+				int temp=arr[i];
+				arr[i]=arr[min_index];
+				arr[min_index]=temp;
+			}
+		}
+		printArr(arr);
+	}
+堆排序：
+问题1：什么是堆？
+堆就是一棵完全二叉树，其每一个父节点永远比其两个子节点要大或者小。即一个堆中，根节点永远是这个序列的极值。
+问题2：如何构建堆？
+在一个乱序列中，要构建堆，就要从它的最后一个非叶子节点开始进行筛选操作，到根节也完成筛选为止。所谓的筛选操作，就是让它和其子节点不断进行比较，如果比子节点大/小，则结束，否则就替换更大的一方，然后继续进行比较，直到满足子节点都比自己小或没有子节点。
+问题3：排序的过程？
+第一步，将一个乱序列变成堆，那么，根节点就是其最大的元素，然后，用堆的最后一个叶子节点替换掉根节点，然后移除出去，那最大的元素就不在堆树里面了，这时候，进行一次筛选，使得根节点重新满足堆的要求，然后重复上述步骤，直到根节点就是叶子节点为止。
+相较于快速排序，堆排序堆原始记录的排列状态并不敏感，它的时间复杂度也是O(nlog2 N)，它是一种不稳定的排序方法。
+/**
+	 * 堆排序
+	 * 思想：现将待排序数组构建成堆，然后将根节点和末尾节点进行交换，在重新调整成为堆。最后称为有序数组。
+	 * 时间复杂度：O(nlog2 N)
+	 * 是否稳定：不稳定
+	 *
+	 */
+	/**
+	 * 建堆的过程是从该树(子树)的根节点开始
+	 * 跟每一个子节点进行比较，并把较大的替换掉。
+	 * 因为堆中的每一颗子树都是一个堆，所以没有被替换的节点的堆结构并未发生改变
+	 * 所以只需要以替换掉的（比较中获胜的）子节点为根节点，继续往下替换，一直换到叶子节点为止。
+	 * 整个建堆的过程就结束了。
+	 */
+	public static void 建堆(int[] arr,int start,int end)
+	{
+		int father=start;
+		int son=father*2+1;
+		while(son<=end)
+		{
+			int big_son=son;
+			if(son+1<=end)
+			{
+				big_son=arr[son]>arr[son+1]?son:son+1;
+			}
+			if(arr[big_son]>arr[father])
+			{
+				int temp=arr[big_son];
+				arr[big_son]=arr[father];
+				arr[father]=temp;
+				father=big_son;
+				son=father*2+1;
+			}
+			else
+				break;
+
+		}
+	}
+	public static void 堆排序()
+	{
+		int []arr=getArr();
+		int little_father=(length-2)/2;
+		/**
+		 * 一个不稳定的数组建堆需要先从最后一个非叶子节点开始
+		 * 一直到根节点结束。
+		 */
+		for(int i=little_father;i>=0;i--)
+		{
+			建堆(arr,i,length-1);
+		}
+		for(int i=0;i<length;i++)
+		{
+			建堆(arr,0,length-i-1);
+			//每构建完一个堆，就将根节点和最末尾一个元素替换
+			int temp=arr[0];
+			arr[0]=arr[length-i-1];
+			arr[length-i-1]=temp;
+			
+		}
+		printArr(arr);	
+	}
+归并排序：
+问题1：什么是归并？
+归并就是将两个或两个以上的有序序列归并成一个有序序列的过程。
+所以归并排序的思路就是，将一个无序序列划分为n个有序序列，每个长度为1，然后相邻的两两配对，进行一次归并，变成n/2个有序序列，然后重复上述步骤，直到只剩下1个有序序列。
+而一次归并的算法思路则是，记录下两个相邻有序序列的起始位置和结束位置，然后，依次对这两个有序序列的头部开始比较，然后记录在一个新的数组之中，直到有一方的每一个元素都被比较过，那另一方的剩余元素可以直接合并到新数组的末尾。
+归并算法是一种稳定的排序算法。时间复杂度也是O(nlog2 N)。
+/**
+	 * 归并排序
+	 * 时间复杂度：O(nlog2 N)
+	 * 是否稳定：稳定
+	 */
+	public static int[] 归并排序(int []arr,int start,int end)
+	{
+		int len=end-start+1;
+		int []result=new int[len];
+		if(len==1)
+		{
+			result[0]=arr[start];
+			return result;
+		}
+		int mid=start+len/2;
+		int left_start=start;
+		int left_end=mid-1;
+		int right_start=mid;
+		int right_end=end;	
+		
+		int []left=归并排序(arr,left_start,left_end);
+		int []right=归并排序(arr,right_start,right_end);
+		int index=0; 
+		//将个数组合起来
+		left_start=0;
+		left_end=left.length-1;
+		right_start=0;
+		right_end=right.length-1;	
+		while(left_start<=left_end&&right_start<=right_end)
+		{
+			if(left[left_start]<right[right_start])
+			{
+				result[index]=left[left_start];
+				left_start++;
+			}
+			else 
+			{
+				result[index]=right[right_start];
+				right_start++;
+			}
+			index++;
+		}
+		while(left_start<=left_end)
+		{
+			result[index]=left[left_start];
+			left_start++;
+			index++;
+		}
+		while(right_start<=right_end)
+		{
+			result[index]=right[right_start];
+			right_start++;
+			index++;
+		}
+		return result;
+		
+	}
+	public static void 归并排序()
+	{
+		int[] arr=getArr();
+		归并排序(arr,0,length-1);
+	}
+计数排序
+https://blog.csdn.net/developer1024/article/details/79770154
+
+桶排序
+https://blog.csdn.net/developer1024/article/details/79770240
+
+基数排序
+https://blog.csdn.net/developer1024/article/details/79770321
+
+查找算法：
+静态查找：在查找不成功的时候，只返回一个不成功标识，查找不成功不改变查找集合。
+动态查找：在查找不成功的时候，将会把被查找的记录插入到查找集合中，查找的结果可能会改变查找集合。
+查找结构：
+	线性表：适用于静态查找，主要有顺序查找和折半查找两种。
+	树表：适用于动态查找，主要采用二叉排序树查找技术。
+	散列表：静态动态均可，主要采用散列技术。
+
+顺序查找：从线性表的一端到另一端逐个将关键码与给定值进行比较，如果相等，则查找成功，若遍历整个线性表都没有找到匹配值，就查找失败。为了提高效率，避免每进行一次比较都做一次越界判断，可以将线性表的0号位空出来，设置为哨兵(等于给定值)，然后从末端开始查找，那最终得出的结果一定是大于0的。再通过一个if判断，倘若结果大于0，那就查找成功，否则就查找失败。这样改进将会使得表长大于1000时，进行一个顺序查找的平均时间减少近乎一半。
+
+顺序查找的缺点时平均查找长度较大，效率较低，但是，它的算法简单，而且适用面广，在顺序存储和链接存储中均使用，且对表中记录的有序性没有要求。
+
+折半查找：对一个有序的顺序表中，取中间值作为比较对象，当要查找值大于比较对象时，就截取有序表中[mid+1，length-1]中的元素，再次比较其中值，直到找到或者max<min。时间复杂度为O(log2N)

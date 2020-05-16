@@ -1,0 +1,77 @@
+一般来说内存泄漏有两种情况。一种情况如在C/C++语言中的，在堆中的分配的内存，在没有将其释放掉的时候，就将所有能访问这块内存的方式都删掉（如指针重新赋值）；另一种情况则是在内存对象明明已经不需要的时候，还仍然保留着这块内存和它的访问方式（引用）。第一种情况，在Java中已经由于垃圾回收机制的引入，得到了很好的解决。所以，Java中的内存泄漏，主要指的是第二种情况。
+	Vector v=new Vector(10);
+	for (int i=1;i<100; i++){
+		Object o=new Object();
+		v.add(o);
+		o=null;
+	}
+	
+在这个例子中，代码栈中存在Vector对象的引用v和Object对象的引用o。在For循环中，我们不断的生成新的对象，然后将其添加到Vector对象中，之后将o引用置空。问题是当o引用被置空后，如果发生GC，我们创建的Object对象是否能够被GC回收呢？答案是否定的。因为，GC在跟踪代码栈中的引用时，会发现v引用，而继续往下跟踪，就会发现v引用指向的内存空间中又存在指向Object对象的引用。也就是说尽管o引用已经被置空，但是Object对象仍然存在其他的引用，是可以被访问到的，所以GC无法将其释放掉。如果在此循环之后，Object对象对程序已经没有任何作用，那么我们就认为此Java程序发生了内存泄漏。
+尽管对于C/C++中的内存泄露情况来说，Java内存泄露导致的破坏性小，除了少数情况会出现程序崩溃的情况外，大多数情况下程序仍然能正常运行。但是，在移动设备对于内存和CPU都有较严格的限制的情况下，Java的内存溢出会导致程序效率低下、占用大量不需要的内存等问题。这将导致整个机器性能变差，严重的也会引起抛出OutOfMemoryError，导致程序崩溃。
+
+#一般情况下内存泄漏的避免
+在不涉及复杂数据结构的一般情况下，Java的内存泄露表现为一个内存对象的生命周期超出了程序需要它的时间长度。我们有时也将其称为“对象游离”。 
+ 1 public class FileSearch{
+ 2 
+ 3     private byte[] content;
+ 4     private File mFile;
+ 5     
+ 6     public FileSearch(File file){
+ 7         mFile = file;
+ 8     }
+ 9 
+10     public boolean hasString(String str){
+11         int size = getFileSize(mFile);
+12         content = new byte[size];
+13         loadFile(mFile, content);
+14         
+15         String s = new String(content);
+16         return s.contains(str);
+17     }
+18 }
+ 在这段代码中，FileSearch类中有一个函数hasString，用来判断文档中是否含有指定的字符串。流程是先将mFile加载到内存中，然后进行判断。但是，这里的问题是，将content声明为了实例变量，而不是本地变量。于是，在此函数返回之后，内存中仍然存在整个文件的数据。而很明显，这些数据我们后续是不再需要的，这就造成了内存的无故浪费。
+ 要避免这种情况下的内存泄露，要求我们以C/C++的内存管理思维来管理自己分配的内存。第一，是在声明对象引用之前，明确内存对象的有效作用域。在一个函数内有效的内存对象，应该声明为local变量，与类实例生命周期相同的要声明为实例变量……以此类推。第二，在内存对象不再需要时，记得手动将其引用置空。
+
+#复杂数据结构中的内存泄露问题
+ 在实际的项目中，我们经常用到一些较为复杂的数据结构用于缓存程序运行过程中需要的数据信息。有时，由于数据结构过于复杂，或者我们存在一些特殊的需求（例如，在内存允许的情况下，尽可能多的缓存信息来提高程序的运行速度等情况），我们很难对数据结构中数据的生命周期作出明确的界定。这个时候，我们可以使用Java中一种特殊的机制来达到防止内存泄露的目的。
+
+ 之前我们介绍过，Java的GC机制是建立在跟踪内存的引用机制上的。而在此之前，我们所使用的引用都只是定义一个“Object o;”这样形式的。事实上，这只是Java引用机制中的一种默认情况，除此之外，还有其他的一些引用方式。通过使用这些特殊的引用机制，配合GC机制，就可以达到一些我们需要的效果。
+ 
+ <1>Java中的几种引用方式
+	1、强引用:
+	在此之前我们介绍的内容中所使用的引用都是强引用，这是使用最普遍的引用。如果一个对象具有强引用，那就类似于必不可少的生活用品，垃圾回收器绝不会回收它。当内存空 间不足，Java虚拟机宁愿抛出OutOfMemoryError错误，使程序异常终止，也不会靠随意回收具有强引用的对象来解决内存不足问题。
+
+
+	2、软引用（SoftReference）
+
+	SoftReference 类的一个典型用途就是用于内存敏感的高速缓存。SoftReference 的原理是：在保持对对象的引用时保证在 JVM 报告内存不足情况之前将清除所有的软引用。关键之处在于，垃圾收集器在运行时可能会（也可能不会）释放软可及对象。对象是否被释放取决于垃圾收集器的算法 以及垃圾收集器运行时可用的内存数量。
+
+
+	3、弱引用（WeakReference）
+
+	WeakReference 类的一个典型用途就是规范化映射（canonicalized mapping）。另外，对于那些生存期相对较长而且重新创建的开销也不高的对象来说，弱引用也比较有用。关键之处在于，垃圾收集器运行时如果碰到了弱可及对象，将释放 WeakReference 引用的对象。然而，请注意，垃圾收集器可能要运行多次才能找到并释放弱可及对象。
+
+
+	4、虚引用（PhantomReference）
+
+	PhantomReference 类只能用于跟踪对被引用对象即将进行的收集。同样，它还能用于执行 pre-mortem 清除操作。PhantomReference 必须与 ReferenceQueue 类一起使用。需要 ReferenceQueue 是因为它能够充当通知机制。当垃圾收集器确定了某个对象是虚可及对象时，PhantomReference 对象就被放在它的 ReferenceQueue 上。将 PhantomReference 对象放在 ReferenceQueue 上也就是一个通知，表明 PhantomReference 对象引用的对象已经结束，可供收集了。这使您能够刚好在对象占用的内存被回收之前采取行动。Reference与ReferenceQueue的配合使用。
+
+#GC、Reference与ReferenceQueue的交互
+
+<1>GC无法删除存在强引用的对象的内存。
+<2>GC发现一个只有软引用的对象内存，那么：
+	1 SoftReference对象的referent 域被设置为null，从而使该对象不再引用heap对象。
+	2 SoftReference引用过的heap对象被声明为finalizable。	
+	3 当 heap 对象的 finalize() 方法被运行而且该对象占用的内存被释放，SoftReference 对象就被添加到它的ReferenceQueue（如果后者存在的话）。
+<3>GC发现一个只有弱引用的对象内存，那么：
+	1 WeakReference对象的referent域被设置为null,从而使该对象不再引用heap对象。
+	2 WeakReference引用过的heap对象被声明为finalizable。
+	3 当heap对象的finalize()方法被运行而且该对象占用的内存被释放时，WeakReference
+	对象就被添加到它的ReferenceQueue（如果后者存在的话）。
+<4>GC发现一个只有虚引用的对象内存，那么：
+	1 PhantomReference引用过的heap对象被声明为finalizable。
+	2 PhantomReference在堆对象被释放之前就被添加到它的ReferenceQueue。
+	
+注意：1、GC在一般情况下不会发现软引用的内存对象，只有在内存明显不足的时候才会发现并释放软引用对象的内存。2、GC对弱引用的发现和释放也不是立即的，有时需要重复几次GC，才会发现并释放弱引用的内存对象。3、软引用和弱引用在添加到ReferenceQueue的时候，其指向真实内存的引用已经被置为空了，相关的内存也已经被释放掉了。而虚引用在添加到ReferenceQueue的时候，内存还没有释放，仍然可以对其进行访问。
+
+https://www.cnblogs.com/qq78292959/archive/2011/07/25/2116123.html

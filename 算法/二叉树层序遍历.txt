@@ -1,0 +1,17 @@
+
+void SeqTraverse(BiTree tree)
+{
+	SeqQueue queue = Init_SeqQueue();
+	Push_SeqQueue(queue, tree);
+	while (!IsEmpty_SeqQueue(queue))
+	{
+		BiTree root = Pop_SeqQueue(queue);
+		printf("%c ", root->data);
+		if (root->lchild)
+			Push_SeqQueue(queue, root->lchild);
+		if(root->rchild)
+			Push_SeqQueue(queue, root->rchild);
+	}
+	printf("\n");
+
+https://blog.csdn.net/qq_29542611/java/article/details/79372678

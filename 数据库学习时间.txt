@@ -1,0 +1,476 @@
+mysql常用引擎MyISAM和InnoDB的区别：
+【事务处理】
+	MyISAM是非事务安全型的，而InnoDB是事务安全型的（支持事务处理等高级处理）；
+【锁机制不同】
+	MyISAM是表级锁，而InnoDB是行级锁；
+【select ,update ,insert ,delete 操作】
+	MyISAM：如果执行大量的SELECT，MyISAM是更好的选择
+	InnoDB：如果你的数据执行大量的INSERT或UPDATE，出于性能方面的考虑，应该使用InnoDB表
+【查询表的行数不同】
+	MyISAM：select count(*) from table,MyISAM只要简单的读出保存好的行数，注意的是，当count(*)语句包含 where条件时，两种表的操作是一样的
+	InnoDB ： InnoDB 中不保存表的具体行数，也就是说，执行select count(*) from table时，InnoDB要扫描一遍整个表来计算有多少行
+【外键支持】
+	mysiam表不支持外键，而InnoDB支持。
+
+-------------------MYSQL的常用引擎-----------------------
+https://mp.weixin.qq.com/s/SYfsk4DP3Mbeq2p3C0HlQQ
+------------------------------------------------------------
+【InnoDB存储引擎】
+InnoDB给MySQL的表提供了事务处理、回滚、崩溃修复能力和多版本并发控制的事务安全。在MySQL从3.23.34a开始包含InnnoDB。它是MySQL上第一个提供外键约束的表引擎。而且InnoDB对事务处理的能力，也是其他存储引擎不能比拟的。靠后版本的MySQL的默认存储引擎就是InnoDB。
+InnoDB存储引擎总支持AUTO_INCREMENT。自动增长列的值不能为空，并且值必须唯一。MySQL中规定自增列必须为主键。在插入值的时候，如果自动增长列不输入值，则插入的值为自动增长后的值；如果输入的值为0或空（NULL），则插入的值也是自动增长后的值；如果插入某个确定的值，且该值在前面没有出现过，就可以直接插入。
+InnoDB还支持外键（FOREIGN KEY）。外键所在的表叫做子表，外键所依赖（REFERENCES）的表叫做父表。父表中被子表外键关联的字段必须为主键【这里有误，只要是唯一字段都可以】。当删除、更新父表中的某条信息时，子表也必须有相应的改变，这是数据库的参照完整性规则。
+InnoDB中，创建的表的表结构存储在.frm文件中（我觉得是frame的缩写吧）。数据和索引存储在innodbdatahomedir和innodbdatafilepath定义的表空间中。
+InnoDB的优势在于提供了良好的事务处理、崩溃修复能力和并发控制。缺点是读写效率较差，占用的数据空间相对较大。
+【MyISAM存储引擎】
+MyISAM是MySQL中常见的存储引擎，曾经是MySQL的默认存储引擎。MyISAM是基于ISAM引擎发展起来的，增加了许多有用的扩展。
+MyISAM的表存储成3个文件。文件的名字与表名相同。拓展名为frm、MYD、MYI。其实，frm文件存储表的结构；MYD文件存储数据，是MYData的缩写；MYI文件存储索引，是MYIndex的缩写。
+基于MyISAM存储引擎的表支持3种不同的存储格式。包括静态型、动态型和压缩型。其中，静态型是MyISAM的默认存储格式，它的字段是固定长度的；动态型包含变长字段，记录的长度不是固定的；压缩型需要用到myisampack工具，占用的磁盘空间较小。
+MyISAM的优势在于占用空间小，处理速度快。缺点是不支持事务的完整性和并发性。【补充一点，myisam还支持全文索引】
+【MEMORY存储引擎】&【又叫HEAP】
+MEMORY是MySQL中一类特殊的存储引擎。它使用存储在内存中的内容来创建表，而且数据全部放在内存中。这些特性与前面的两个很不同。
+每个基于MEMORY存储引擎的表实际对应一个磁盘文件。该文件的文件名与表名相同，类型为frm类型。该文件中只存储表的结构。而其数据文件，都是存储在内存中，这样有利于数据的快速处理，提高整个表的效率。值得注意的是，服务器需要有足够的内存来维持MEMORY存储引擎的表的使用。如果不需要了，可以释放内存，甚至删除不需要的表。
+MEMORY默认使用哈希索引。速度比使用B型树索引快。当然如果你想用B型树索引，可以在创建索引时指定。
+注意，MEMORY用到的很少，因为它是把数据存到内存中，如果内存出现异常就会影响数据。如果重启或者关机，所有数据都会消失。因此，基于MEMORY的表的生命周期很短，一般是一次性的。
+【NDB存储引擎】
+2003年，MySQL AB公司从Sony Ericsson公司收购了NDB 集群引擎。NDB存储引擎是一个集群存储引擎，类似于Oracle的RAC集群；不过，与Oracle RAC share everything结构不同的是，其结构是share nothing的集群架构，因此能提供更高级别的高可用性。NDB的特点是数据全部放在内存中（从5.1版本开始，可以将非索引数据放在磁盘上），因此主键查找（primary key lookup）的速度极快，并且通过添加NDB数据存储节点（Data Node）可以线性地提高数据库性能，是高可用、高性能的集群系统。
+关于NDB存储引擎，有一个问题值得注意，那就是NDB存储引擎的连接操作（JOIN）是在MySQL数据库层完成的，而不是在存储引擎层完成的。这意味着，复杂的连接操作需要巨大的网络开销，因此查询速度很慢。如果解决了这个问题，NDB存储引擎的市场应该是非常巨大的。
+
+----------------SQL语句的分类--------------------------
+https://blog.csdn.net/yangwenxue_admin/article/details/45057315
+-------------------------------------------
+DDL（ Data Definition Language statements数据定义语言，用于定义和管理 SQL 数据库中的所有对象的语言）
+	包含的语句：
+	CREATE DATABAS/TABLE （创建数据库和表）
+	【数据库：create database deleteDB】
+	【表：CREATE TABLE t1(id int  PRIMARY KEY,name varchar(50) NOT null)】
+	ALTER DATABASE/TABLE (修改数据库的字符集类型、数据库名称|增加删除表列，修改列的数据类型等)
+	DROP DATABASE/TABLE name（清空表数据并且删除表定义）
+	TRUNCATE TABLE table_name（清空表数据但不删除表定义）
+	COMMENT - add comments to the data dictionary 注释
+	GRAND 权限 ON 数据库对象 TO 用户（用户授权）
+	REVOKE 权限 ON 数据库对象 TO 用户（用农户权限回收）
+DML(Data Manipulation Language statements数据操作语言,SQL中处理数据等操作统称为数据操纵语言)
+	包含的语句：
+	SELECT【Select * from table_name where id=1】
+	INSERT【Insert  into table_name(id,name) values(1,"Mr.Zhang")】
+	UPDATE【Update table_name set name="Mr.Li" where id=1】
+	DELETE【Delete from table_name where id=1】
+	CALL【详见存储过程】
+	EXPLAIN PLAN【详见SQL执行计划】
+	LOCK TABLE【LOCK TABLE table_name read|write】
+		#read锁限制上锁线程及其他线程对表进行写操作，但可以进行读操作。
+		#write锁限制除了上锁线程外的其他对表进行读写操作，但对上锁线程无限制。
+		#UNLOCK TABLE table_name释放该表所有的锁
+		#感觉没什么用，因为只是mysql的功能，详情可见https://www.cnblogs.com/kerrycode/p/6991502.html
+DCL(Data Control Language statements数据控制语言,用来授予或回收访问数据库的某种特权，并控制数据库操纵事务发生的时间及效果，对数据库实行监视等)
+	COMMIT - save work done 提交
+
+	SAVEPOINT - identify a point in a transaction to which you can later roll back 保存点
+
+	ROLLBACK - restore database to original since the last COMMIT 回滚
+	
+SET TRANSACTION - Change transaction options like what rollback segment to use 设置当前事务的特性，它对后面的事务没有影响．#可以修改事务隔离级别（读未提交、读已提交、可重复度、串行化）或者修改事务内表数据的访问模式（可读可写或只读两种）。
+
+
+----------------SQL语句的分类End--------------------------
+
+数据库的保护包括哪四种：
+安全性控制、完整性控制、并发控制、存储管理。
+
+----------------SQL的事务-------------------------
+https://blog.csdn.net/w_linux/article/details/79666086
+----------------------------------------------
+【定义】
+事务是最小的不可再分的工作单位，通常一个事务对应一个完整的业务。(比如银行卡的转账，就是一个业务)
+一个完整的业务需要批量的DML语句共同联合完成。
+【工作过程】
+用户和数据库进行连接以后，会开启一个临时的事务日志（有效期直至当前用户当次连接结束）。
+（在MySQL中）用户直接进行DML操作，数据库会将执行结果直接写入到数据库中去。（因为MySQL默认是自动提交的）
+而当开启的事务以后（start transaction），用户后续的所有写操作，会先写入到临时的日志文件里。
+而当用户执行查询时，所得到的数据会先经过临时日志文件处理，所以查询到的将是当前事务未提交前的数据。
+当事务结束，（commit或者rollback），如果为commit，就将日志文件的数据同步到数据表中。临日日志文件将会清空。
+而如果是用户与数据库的连接断开，临时日志文件也同样会被清空。
+值得一提的是，回滚操作并不只是在用户执行了rollback操作以后进行的，如果用户所执行的SQL语句报错，数据库也会自动执行回滚操作。
+【事务四大特征(ACID)】
+原子性(Atomicity)：事务是最小单位，不可再分
+一致性(Consistency)：事务要求所有的DML语句操作的时候，必须保证同时成功或者同时失败
+隔离性(Isolation)：事务A和事务B之间具有隔离性
+持久性(Durability)：是事务的保证，事务终结的标志(内存的数据持久到硬盘文件中)
+【事务的开启与结束】
+-  当任何一条DML语句执行时，标志着事务的开启。
+-  提交（commit）：成功的结束，将所有的DML语句操作历史记录和底层硬盘数据来一次同步
+-  回滚（rollback）：失败的结束，将所有的DML语句操作历史记录全部清空
+【MySQL中的事务】
+在MySQL中，默认情况下，事务是自动提交的，也就是说，只要执行一条DML语句就开启了事务，并且提交了事务。
+所以要实现真正的事务，需要将自动提交机制关闭。
+	提交操作：
+	》start transaction;#手动开启事务
+	》DML语句
+	》commit
+	回滚操作：
+	》start transaction;#手动开启事务
+	》DML语句
+	》rollback
+【隔离性】
+事务A和事务B之间具有一定的隔离性
+隔离性有隔离级别(4个)
+-  读未提交：read uncommitted
+-  读已提交：read committed
+-  可重复读：repeatable read
+-  串行化：serializable	
+	读未提交：
+	-  允许别的事务，去读取这个事务未提交之前的数据，也就是说，你读了别人正在处理的数据
+	-  特点：可能会造成脏读、幻读、不可重复读。
+	- 这种隔离级别最低，这种级别一般是在理论上存在，数据库隔离级别一般都高于该级别
+	读已提交：
+	-  只允许别的事务去读取该事务提交以后的数据，换句话说，对方事务提交之后的数据，我当前事务才能读取到
+	- 这种隔离级别高于读未提交
+	- 特点：两次读的都是真的（不脏读） 可是却存在不可重复
+	- Oracle默认隔离级别
+	可重复读：
+	- 事务执行期间，不允许其他事务对该事务数据进行操作，保证该事物中多次对数据的查询结果一致。即同一个读取操作无论重复多少次，读取到的结果都是一样的。
+	- 当然，这里所指的不变的数据是指【其他事务操作的数据】，如果第一次读取能够读取到其他事务的数据，后面不管其他事务有任何其他任何操作，都不会影响已读取到的其他事务产生的数据。但是自己所在的事务中产生的数据，自己是都可以读取到的
+	
+- 特点： 这种隔离级别可以避免“不可重复读取”，达到可重复读取，但是会出现幻读
+	- 这种隔离级别高于读已提交
+	- MySQL默认级别
+
+	串行化：
+	- 事务A和事务B，事务A在操作数据库时，事务B只能排队等待，连在旁边看的机会都没有
+	- 特点：这种隔离级别很少使用，吞吐量太低，用户体验差
+	- 这种级别可以避免“幻像读”，每一次读取的都是数据库中真实存在数据，事务A与事务B串行，而不并发
+	【脏读】
+	一个事务在执行的过程中读取到了其他事务还没有提交的数据。
+	【脏数据】
+	仅仅是指由脏读所产生的“临时”的数据。
+	【不可重复读】
+	一个事物两次读取同一个数据，两次读取的数据不一致。
+	【幻读】
+	读取到的数据已不再适用。
+	例子：
+	事务A操作如下：
+	1、打开事务
+	2、查询号码为X的记录，不存在
+	3、插入号码为X的数据，插入报错（为什么会报错，先向下看）
+	4、查询号码为X的记录，发现还是不存在（由于是可重复读，所以读取记录X还是不存在的）
+	事物B操作：在事务A第2步操作时插入了一条X的记录，所以会导致A中第3步插入报错（违反了唯一约束）
+	上面操作对A来说就像发生了幻觉一样，明明查询X（A中第二步、第四步）不存在，但却无法插入成功
+【锁】
+在数据库中有两种基本的锁类型：排它锁（Exclusive Locks，即X锁）和共享锁（Share Locks，即S锁）。当数据对象被加上排它锁时，其他的事务不能对它读取和修改。加了共享锁的数据对象可以被其他事务读取，但不能修改。数据库利用这两 种基本的锁类型来对数据库的事务进行并发控制。 
+https://www.cnblogs.com/tian666/p/7852646.html
+【保存点】
+	操作：
+	mysql>SAVEPOINT test;#指定保存点，保存点名为test
+	作用：使得在事务回滚时，可以回滚到保存点，保存点之前的操作得以保留，保存点之后的数据需要重做。
+	mysql> ROLLBACK TO SAVEPOINT test;#回滚到保存点test
+		
+----------------SQL的事务End--------------------------
+
+-----------------存储过程-------------------
+https://www.runoob.com/w3cnote/mysql-stored-procedure.html
+---------------------------------------------
+MySQL 5.0 版本开始支持存储过程。
+存储过程（Stored Procedure）是一种在数据库中存储复杂程序，以便外部程序调用的一种数据库对象。
+存储过程是为了完成特定功能的SQL语句集，经编译创建并保存在数据库中，用户可通过指定存储过程的名字并给定参数(需要时)来调用执行。
+存储过程思想上很简单，就是数据库 SQL 语言层面的代码封装与重用。
+	【优点】
+	存储过程可封装，并隐藏复杂的商业逻辑。
+	存储过程可以回传值，并可以接受参数。
+	存储过程无法使用 SELECT 指令来运行，因为它是子程序，与查看表，数据表或用户定义函数不同。
+	存储过程可以用在数据检验，强制实行商业逻辑等。
+	【缺点】
+	存储过程，往往定制化于特定的数据库上，因为支持的编程语言不同。当切换到其他厂商的数据库系统时，需要重写原有的存储过程。
+	存储过程的性能调校与撰写，受限于各种数据库系统。
+【创建存储过程】
+mysql> delimiter $$　　#将语句的结束符号从分号;临时改为两个$$(可以是自定义)
+mysql> CREATE PROCEDURE deleteByID(IN p_id INTEGER)
+    -> BEGIN
+    -> 　　DELETE FROM t1
+    ->    WHERE id = p_id;
+    -> END$$
+mysql> delimiter ;　　#将语句的结束符号恢复为分号
+ 在定义过程时，使用 DELIMITER $$ 命令将语句的结束符号从分号 ; 临时改为两个 $$，使得过程体中使用的分号被直接传递到服务器，而不会被客户端（如mysql）解释。
+存储过程体包含了在过程调用时必须执行的语句，例如：dml、ddl语句，if-then-else和while-do语句、声明变量的declare语句等
+过程体格式：以begin开始，以end结束(可嵌套)
+【调用存储过程】
+call p_test(15);
+【参数类型】
+MySQL存储过程的参数用在存储过程的定义，共有三种参数类型,IN,OUT,INOUT
+1、IN 输入参数：表示调用者向过程传入值（传入值可以是字面量或变量）
+2、OUT 输出参数：表示过程向调用者传出值(可以返回多个值)（传出值只能是变量）
+3、INOUT 输入输出参数：既表示调用者向过程传入值，又表示过程向调用者传出值（值只能是变量）
+#注意：
+	如果过程没有参数，也必须在过程名后面写上小括号
+	确保参数的名字不等于列的名字，否则在过程体中，参数名被当做列名来处理
+【变量】
+mysql存储过程中，定义变量有两种方式：
+《SET》set @var=1;
+可以在一个会话的任何地方声明，作用域是整个会话，称为会话变量。【何谓会话？即一个用户从连接数据库[输入账号密码]（Connect）到断开数据库连接（Disconnect）的这整个过程。】
+《DECLARE》
+	语法：DECLARE variable_name[,variable_name...] datatype [DEFAULT value];
+	实例：DECLARE var1  INT DEFAULT 0; 
+《区别》在调用存储过程时，以DECLARE声明的变量都会被初始化为 NULL。而会话变量（即@开头的变量）则不会被再初始化，在一个会话内，只须初始化一次，之后在会话内都是对上一次计算的结果，就相当于在是这个会话内的全局变量。
+-----------------存储过程End---------------
+-----------------自定义函数Start------------
+https://www.cnblogs.com/chenjiacheng/p/6522211.html
+---------------------------------------------
+【定义语法】
+create Function 函数名([形参列表]) returns 返回值的数据类型
+begin
+-- 函数体
+-- return 返回值
+end
+- 在mysql中，在定义函数参数(形参)时必须指定其数据类型, 可以有多个形参。
+- 在调用函数的时候,必须传入对应的实际参数: 个数与类型都必须完全一致。
+- Mysql函数中函数的参数,不存在引用传递(都是值传递), 也没有默认值(每个形参都必须传入实参)
+- 函数内部(函数体) 的具体返回数据,必须与结构上指定的类型相同(returns)
+- 局部变量: 在局部作用域定义的变量(结构内部)
+	Declare 变量名 数据类型 [其他属性]; -- 一个结构内部若要声明局部变量: 必须是在所有代码的最前面.
+【函数和存储过程的区别】
+	1、一般来说，存储过程实现的功能要复杂一点，而函数的实现的功能针对性比较强。存储过程，功能强大，可以执行包括修改表等一系列数据库操作；用户定义函数不能用于执行一组修改全局数据库状态的操作。
+	2、对于存储过程来说可以返回参数，如记录集，而函数只能返回值或者表对象。函数只能返回一个变量；而存储过程可以返回多个。存储过程的参数可以有IN,OUT,INOUT三种类型，而函数只能有IN类~~存储过程声明时不需要返回类型，而函数声明时需要描述返回类型，且函数体中必须包含一个有效的RETURN语句。
+	3、存储过程，可以使用非确定函数，不允许在用户定义函数主体中内置非确定函数。
+	4、存储过程一般是作为一个独立的部分来执行（ EXECUTE 语句执行），而函数可以作为查询语句的一个部分来调用（SELECT调用），由于函数可以返回一个表对象，因此它可以在查询语句中位于FROM关键字的后面。 SQL语句中不可用存储过程，而可以使用函数。
+-----------------SQL执行计划--------------
+https://www.jianshu.com/p/514aa0b139d8
+---------------------------------------------
+SQL执行计划，就是一条SQL语句，在数据库中实际执行的时候，一步步的分别都做了什么。就是我们用EXPLAIN分析一条SQL语句时展示出来的那些信息。
+了解SQL执行计划的意义就在于我们可以通过执行计划更加清晰的认识到这一条语句，分为了哪几步，有没有用到索引，是否有一些可优化的地方等。
+实际运行一个EXPLAIN时候，我们都能看到这个表头，它含有id、select_type、type、possible_keys、key、key_len等字段。
+【各个字段的用处说明详见https://www.jianshu.com/p/514aa0b139d8】
+-----------------SQL执行计划End-----------
+------------------SQL的索引Start----------------
+https://www.cnblogs.com/whgk/p/6179612.html
+--------------------------------------------------
+【什么是索引？为什么要建立索引？】
+索引用于快速找出在某个列中有一特定值的行，不使用索引，MySQL必须从第一条记录开始读完整个表，直到找出相关的行，表越大，查询数据所花费的时间就越多，如果表中查询的列有一个索引，MySQL能够快速到达一个位置去搜索数据文件，而不必查看所有数据，那么将会节省很大一部分时间。
+【索引的优缺点】
+#优点：
+	1、有效缩短数据的检索时间
+	2、加快表与表之间的连接
+	3、为用来排序或者是分组的字段添加索引可以加快分组和排序顺序
+	4、建立索引的列可以保证行的唯一性，生成唯一的rowId
+#缺点：
+	1、创建索引和维护索引需要时间成本，这个成本随着数据量的增加而加大
+	2、创建索引和维护索引需要空间成本，每一条索引都要占据数据库的物理存储空间，数据量越大，占用空间也越大（数据表占据的是数据库的数据空间）
+	3、会降低表的增删改的效率，因为每次增删改索引需要进行动态维护，导致时间变长
+所以，并不是每个字段度设置索引就好，也不是索引越多越好，而是需要自己合理的使用。
+通常来说：
+	1、对经常更新的表就避免对其进行过多的索引，对经常用于查询的字段应该创建索引，
+	2、数据量小的表最好不要使用索引，因为由于数据较少，可能查询全部数据花费的时间比遍历索引的时间还要短，索引就可能不会产生优化效果。
+	3、索引的建立应当更多的选取唯一性更高的字段，而那些重复值较多的字段，比如“性别”，就没必要建立索引了。
+【索引的分类】
+MyISAM和InnoDB存储引擎：只支持BTREE索引， 也就是说默认使用BTREE，不能够更换
+MEMORY/HEAP存储引擎：支持HASH和BTREE索引
+索引分为：单列索引(普通索引，唯一索引，主键索引)、组合索引、全文索引、空间索引。
+》单列索引：一个索引只包含单个列，但一个表中可以有多个单列索引。
+	- 普通索引：MySQL中基本索引类型，没有什么限制，允许在定义索引的列中插入重复值和空值，纯粹为了查询数据更快一点。
+	- 唯一索引：索引列中的值必须是唯一的，但是允许为空值。
+	- 主键索引：即主键，是一种唯一性索引，不允许有空值。
+》组合索引：在表中的多个字段组合上创建的索引，只有在查询条件中使用了这些字段的左边字段时，索引才会被使用，使用组合索引时遵循最左前缀集合。
+》全文索引：全文索引，只有在MyISAM引擎上才能使用，只能在CHAR,VARCHAR,TEXT类型字段上使用全文索引。全文索引，就是在一堆文字中，通过其中的某个关键字等，就能找到该字段所属的记录行，比如有"你是个大煞笔，二货 ..." 通过大煞笔，可能就可以找到该条记录。
+》空间索引：空间索引是对空间数据类型的字段建立的索引，MySQL中的空间数据类型有四种，GEOMETRY、POINT、LINESTRING、POLYGON。知道有这东西就行了。
+【索引的操作】
+在执行CREATE TABLE语句时可以创建索引，也可以单独用CREATE INDEX或ALTER TABLE来为表增加索引。
+	1.CREATE TABLE
+		CREATE TABLE table_name（
+			id int not NULL,
+			name varchar(30),
+			index [index_name](name)#普通索引
+			key [index_name](name)#也可以写成这样
+			#index_name是索引名，可写可不写，不写就会自动用字段名当作索引名
+			UNIQUE INDEX [index_name](id)#唯一索引
+			primary key(id)#主键(索引)
+		）
+	2．ALTER TABLE
+		普通索引：ALTER TABLE table_name ADD INDEX index_name (column_list)
+
+		唯一索引：ALTER TABLE table_name ADD UNIQUE (column_list)
+
+		主键索引：ALTER TABLE table_name ADD PRIMARY KEY (column_list)
+	3.CREATE INDEX
+		（CREATE INDEX可对表增加普通索引或UNIQUE索引。）
+		CREATE INDEX index_name ON table_name (column_list)
+
+		CREATE UNIQUE INDEX index_name ON table_name (column_list)
+	4.组合索引的创建：
+		组合索引就是在多个字段上创建一个索引。
+		INDEX [index_name](id,name)
+	组合索引就是遵从了最左前缀，利用索引中最左边的列集来匹配行，这样的列集称为最左前缀。假如一个由id、name和age3个字段构成的索引，索引行中就按id/name/age的顺序存放，索引可以索引下面字段组合(id，name，age)、(id，name)或者(id)。如果要查询的字段不构成索引最左面的前缀，那么就不会使用索引，比如，age或者（name，age）组合就不会使用索引查询。
+	5、全文索引的创建
+		全文索引可以用于全文搜索，但只有MyISAM存储引擎支持FULLTEXT索引，并且只为CHAR、VARCHAR和TEXT列服务。索引总是对整个列进行，不支持前缀索引。
+		FULLTEXT INDEX [index_name](name)
+		查询时，需要借助到match函数：
+		SELECT * FROM table_name WHERE MATCH(name) AGAINST('hello');
+		全文搜索的限制比较多，比如只能通过MyISAM引擎，比如只能在CHAR,VARCHAR,TEXT上设置全文索引。比如搜索的关键字默认至少要4个字符，比如搜索的关键字太短就会被忽略掉。等等。所以，还是算了吧。
+	6、空间索引的创建【算了吧】
+	7、索引的查询和删除：
+	#查询索引：SHOW INDEX FROM book
+	#删除索引：
+		》方式1：ALTER TABLE 表名 DROP INDEX 索引名。
+		》方式2：DROP INDEX 索引名 ON 表名；
+	
+【索引的原理】
+https://www.cnblogs.com/tgycoder/p/5410057.html
+
+
+-----------------SQL定时器-------------
+
+
+
+------------------外键------------------------------
+https://www.cnblogs.com/microtiger/p/7814177.html
+---------------------------------------------------
+【外键的定义】
+1、MySQL中“键”和“索引”的定义相同，所以外键和主键一样也是索引的一种。
+2、不同的是MySQL会自动为所有表的主键进行索引，但是外键字段必须由用户进行明确的索引。用于外键关系的字段必须在所有的参照表中进行明确地索引，InnoDB不能自动地创建索引。
+3、外键可以是一对一的，一个表的记录只能与另一个表的一条记录连接，或者是一对多的，一个表的记录与另一个表的多条记录连接。
+4、如果需要更好的性能，并且不需要完整性检查，可以选择使用MyISAM表类型，如果想要在MySQL中根据参照完整性来建立表并且希望在此基础上保持良好的性能，最好选择表结构为innoDB类型。
+5、外键的使用条件
+	》两个表必须是InnoDB表，MyISAM表暂时不支持外键
+	》外键列必须建立了索引，MySQL 4.1.2以后的版本在建立外键时会自动创建索引，但如果在较早的版本则需要显式建立；
+	》外键关系的两个表的列必须是数据类型相似，也就是可以相互转换类型的列，比如int和tinyint可以，而int和char则不可以；
+	》被引用的列必须是其所在表的主键或者唯一列
+	》引用列中不能存在被引用列中没有的数据。
+6、外键的好处：可以使得两张表关联，保证数据的一致性和实现一些级联操作。
+【创建外键的语法】
+[CONSTRAINT 外键约束名] FOREIGN KEY [子表表名] (子表列名)
+
+REFERENCES 父表的表名 (父表的主键名或唯一列列名)
+
+
+	[ON DELETE {RESTRICT | CASCADE | SET NULL | NO ACTION | SET DEFAULT}]
+	
+
+[ON UPDATE {RESTRICT | CASCADE | SET NULL | NO ACTION | SET DEFAULT}]
+该语法可以在 CREATE TABLE 和 ALTER TABLE 时使用，如果不指定【外键约束名】，MYSQL会自动生成一个名字。
+ON DELETE、ON UPDATE表示事件触发限制，可设参数：
+	》CASCADE：当父表中的行发生删除或者被引用列发生更新时，子表中匹配的行的外键也会随之自动的删除或者更新。
+	》SET NULL：当父表中的行发生删除或者被引用列发生更新时，子表中的外键列会设置为空值。
+	》RESTRICT：拒绝删除或者更新父表中的行，直到子表中没有该行的关联数据。
+	》NO ACTION：同RESTRICT，注意：不是什么都不做的意思。
+	》SET DEFAULT：表面意思好像是将子表的引用行设置为默认值，但set default只是MySQL 解析器认可，但实际上并不被InnoDB和NDB支持。
+【其他】
+ 外键约束使用最多的两种情况无外乎：
+
+	1）父表更新时子表也更新，父表删除时如果子表有匹配的项，删除失败；
+
+	2）父表更新时子表也更新，父表删除时子表匹配的项也删除。
+
+	》前一种情况，在外键定义中，我们使用ON UPDATE CASCADE ON DELETE RESTRICT；
+	》后一种情况，可以使用ON UPDATE CASCADE ON DELETE CASCADE。
+
+	InnoDB允许你使用ALTER TABLE在一个已经存在的表上增加一个新的外键:
+	
+	ALTER TABLE tbl_name ADD [CONSTRAINT [symbol]] FOREIGN KEY [index_name] (index_col_name, ...) REFERENCES tbl_name (index_col_name,...) [ON DELETE reference_option] [ON UPDATE reference_option] 
+
+	InnoDB也支持使用ALTER TABLE来删除外键：
+
+	》ALTER TABLE tbl_name DROP FOREIGN KEY fk_symbol;
+
+	但是，如果你要直接修改一个外键的设置，好像只能先drop，再重新add一个【未证实，但也找不到相关资料】。
+-----------------------外键End------------------------------
+-----------------------触发器Start---------------------------
+https://blog.csdn.net/babycan5/article/details/82789099
+--------------------------------------------------------------
+【概念】
+1、触发器是一种特殊类型的存储过程，它不同于存储过程，主要是通过事件触发而被执行的，即不是主动调用而执行的；而存储过程则需要主动调用其名字执行。
+2、Trigger，是指事先为某张表绑定一段代码，当表中的某些内容发生改变（增、删、改）的时候，系统会自动触发代码并执行。
+【作用】
+1、可在写入数据前，强制检验或者转换数据(保证护数据安全)
+2、触发器发生错误时，前面用户已经执行成功的操作会被撤销，类似事务的回滚
+【创建语法】
+	delimiter 自定义结束符号
+	create trigger 触发器名字 触发时间 触发事件 on 表 for each row
+	begin
+	    -- 触发器内容主体，每行用分号结尾
+	end
+	自定义的结束符合
+	delimiter ;
+	》on 表 for each：触发对象，触发器绑定的实质是表中的所有行，因此当每一行发生指定改变时，触发器就会发生
+【触发时间】
+	当 SQL 指令发生时，会令行中数据发生变化，而每张表中对应的行有两种状态：数据操作前和操作后
+	before：表中数据发生改变前的状态
+	after：表中数据发生改变后的状态
+	PS：如果 before 触发器失败或者语句本身失败，将不执行 after 触发器(如果有的话)
+【触发事件】
+	触发器是针对数据发送改变才会被触发，对应的操作只有
+	》INSERT
+	》DELETE
+	》UPDATE
+值得注意的是：
+	1、在 MySQL 5 中，触发器名必须在每个表中唯一，但不是在每个数据库中唯一，即同一数据库中的两个表可能具有相同名字的触发器。
+	
+2、每个表的每个事件每次只允许一个触发器，因此，每个表最多支持 6 个触发器，即before/after insert、before/after delete、before/after update
+
+【例子】
+	delimiter ##
+	-- 创建触发器
+	create trigger after_insert_order after insert on orders for each row
+	begin
+    		-- 更新商品表的库存，这里只指定了更新第一件商品的库存
+    		update goods set goods_num = goods_num - 1 where id = 1;
+	end
+	##--语句结束符
+	delimiter ;
+【其他操作】
+
+	#查看触发器#
+	show triggers;
+	#查看触发器的创建语句#
+	show create trigger 触发器名字;
+	#删除触发器#
+	drop trigger 触发器名字;
+【参数】
+触发器针对的是数据库中的每一行记录，每行数据在操作前后都会有一个对应的状态，触发器将没有操作之前的状态保存到 old 关键字中，将操作后的状态保存到 new 中。
+当然，并不是每一个触发器类型都会有old和new。
+INSERT型触发器	没有 old，只有 new，new 表示将要(插入前)或者已经增加(插入后)的数据
+
+UPDATE型触发器	既有 old 也有 new，old 表示更新之前的数据，new 表示更新之后的数据
+
+DELETE型触发器	没有 new，只有 old，old 表示将要(删除前)或者已经被删除(删除后)的数据
+delimiter ##
+-- 创建触发器
+create trigger after_insert_order after insert on orders for each row
+begin
+    -- new 代表 orders 表中新增的数据
+    update goods set goods_num = goods_num - new.goods_num where id = new.goods_id;
+end
+##
+delimiter ;
+【其他】
+MySQL 的触发器中不能对本表进行 insert、update 和 delete 操作，否则会报错
+【优点和缺点】
+优点：
+	触发器可以通过数据库中的关联表实现级联更改，即一张表数据的改变会影响其他表的数据。
+	可以保证数据安全，并进行安全校验。
+缺点：	过分依赖触发器，影响数据库的结构，增加数据库的维护成本
+
+---------------------一些很有用的mysql知识----------------------
+【\g和\G有什么用？】
+\g 的作用是分号和在sql语句中写’;’是等效的 
+\G 的作用是将查到的结构旋转90度变成纵向，同时还起到了结束语句的效果。
+例子：
+select * from table_name\g#查询table_name的所有字段。
+select * from table_name\G#查询table_name的所有字段并横向排列。
+查询结果：
+*************************** 1. row ***************************
+id:1
+name:xxx
+*************************** 2. row ***************************
+id:2
+name:xxx
+【如何查看表所使用的引擎，或者外键约束名等信息呢？】
+show create table 表名
+该语句可以查看到创建该表时所执行的语句，其中的一些系统帮你填写的默认值，也能够在这里看到。
+---------------------一些很有用的mysql知识End----------------------
+
+待研究：
+mysql的动态语句
+mysql union和unionAll
+mysql表连接查询
+mysql触发器
+mysql定时器https://www.cnblogs.com/qlqwjy/p/7954175.html
+mysql虚拟表https://blog.csdn.net/hdduuyf/article/details/83866602
+InnoDB的数据页结构https://www.cnblogs.com/wade-luffy/p/6289917.html
+MySQL表结构，表空间，段，区，页，MVCC  https://blog.csdn.net/qq_18312025/article/details/78658171

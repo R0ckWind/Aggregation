@@ -1,0 +1,383 @@
+1、SpringMVC银行卡管理系统
+	用到的技术：
+		前端：JS、JQuery、HTML5、EventSource（消息轮询SSE【server-sent-event】）
+		后台：Spring、SpringMVC、MyBatis
+		数据库：Mysql
+		所用到的表：bankbin(银行卡对应银行)、card(银行卡)、member(用户)、record(转账记录)、transferMsg(消息表)
+		网络技术：session、cookie
+	主要功能：
+		1、消息轮询：
+			设计一个MEssage表。每转账一次就在里面插一条记录。通过EventSource循环向服务器发送请求。
+			前端代码：
+			window.onload=function fun()//接受消息
+			{
+				var a="<%=session.getAttribute("loginMember")%>"; 
+				if(a!="null")
+				{
+					var eventSource = new EventSource("serverSent.do");	//每隔一段时间会向服务器发送这个请求
+					eventSource.onmessage = function(event) {
+						var str=event.data.split("end");//用end分割两段消息
+						var str1=str[0];
+						var str2=str[1];
+						$new=$("#newMSG").clone(true);
+						$new.children(".MSGMain").children(".MSGVolume").text(str1);
+						$new.children(".MSGMain").children(".MSGDetail").text(str2);
+						$new.appendTo($("#newMSG").parent());//复制一份，万一有很多个一起来，不用复制的话会被覆盖掉
+						$new.animate({height:180},800,'swing');//动画效果
+					};
+				}
+			}
+			后台代码：
+			@ResponseBody
+			@RequestMapping("serverSent")//查询是否有消息可以接收
+			public void serverSent(HttpServletResponse response,HttpSession session)
+			{
+				// ContentType 必须指定为 text/event-stream
+				response.setContentType("text/event-stream");
+				// CharacterEncoding 必须指定为 UTF-8
+				response.setCharacterEncoding("UTF-8");
+				Member user=(Member)session.getAttribute("loginMember");
+				String email=user.getEmail();
+				List<TransferMSG> list=TransferMSGUtil.select(email);
+				if(list.size()>0)
+				{
+					PrintWriter pw;
+					try {				
+						pw = response.getWriter();
+						pw.write("data:+"+list.get(0).getExchange()+"元end"+"\r\n");//end这里用作解析
+						pw.write("data:" + list.get(0).getEmailFrom()+"向你的银行卡"+strHandle.getLast4(list.get(0).getCardTo())
+						+"转账"+list.get(0).getExchange()+"元"+"\n\n");
+						TransferMSGUtil.delete(list.get(0).getMsgID());
+						pw.flush();
+					} 
+					catch (IOException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+				}
+			}
+		2、ajax异步处理
+			前端代码：
+			function check()//检测输入的银行卡是否存在
+			{
+				var tCard=$("#tCardID").val();
+				if (tCard!="")
+	            $.ajax({        //使用了ajax请求，用它来请求服务器的数据不会使得页面刷新
+	                type:"POST",  
+	                url:"getCard.do",
+	                data: {tCard:tCard},
+	                dataType:"text",
+	                success:function(data){           
+	                   /*  $('#mydiv').html(data); */
+	                  	alert(data);  
+	                   	$("#hideIP").val(tCard);
+	                },
+	                error:function(error)
+	                {
+	                	alert("找不到该信用卡,请重新输入！");
+	                  	$("#hideIP").val("none");
+	                }
+	            })
+	            else alert("收款信用卡不能为空!");
+			}
+			后台代码：
+			@ResponseBody//返回文本的注解
+			@RequestMapping(value="getCard.do",produces="text/plain;charset=UTF-8")
+			public String getCard(HttpServletRequest request,HttpSession httpSession)
+			{
+				System.out.println("sessionID:"+httpSession.getId());
+				CardView tcard=CardViewUtil.selectByCardID(request.getParameter("tCard"));
+				//在检测银行卡是否存在的同时，将目标银行卡的卡号传入到session中，然后新的页面就可以直接获取了，这样就可以少访问一次数据库了。
+				httpSession.setAttribute("tCard", tcard);
+				return "收款人:"+tcard.getUserName();//返回的是字符串，对应了ajax请求中  dataType:"text"
+			}
+		3、MyBatis
+			#database.xml:
+			<?xml version="1.0" encoding="UTF-8"?>
+			<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-config.dtd">
+			<configuration>
+				<environments default="development">
+					<environment id="development">
+						<transactionManager type="JDBC" />
+						<!-- 配置数据库连接信息 -->
+						<dataSource type="POOLED">
+							
+							<property name="driver" value="com.mysql.jdbc.Driver" />
+							<property name="url" value="jdbc:mysql://localhost:3306/bank?characterEncoding=utf-8" />
+							<property name="username" value="root" /><!-- 使用的时候只需要改用户名和密码 -->
+							<property name="password" value="666666" />
+						</dataSource>
+					</environment>
+				</environments>
+				<mappers><!-- 配置mybatis的xml文件，和vo类、xxUtil类一一对应，俗称三位一体 -->
+					<mapper resource="com/bean/vObject/member.xml"/>
+					<mapper resource="com/bean/vObject/card.xml"/>
+					<mapper resource="com/bean/vObject/record.xml"/>
+					<mapper resource="com/bean/vObject/cardView.xml"/>
+					<mapper resource="com/bean/vObject/recordView.xml"/>
+					<mapper resource="com/bean/vObject/bankBin.xml"/>
+					<mapper resource="com/bean/vObject/transferMSG.xml"/>
+				</mappers>
+			</configuration>
+			#member.xml:
+			<?xml version="1.0" encoding="UTF-8" ?>
+			<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+			<!-- namespace="bank.memberMapper"需要一个唯一的值 -->
+			<mapper namespace="bank.memberMapper">
+				 <!-- 	1.select标签里写查询语句,insert标签里写插入语句,以此类推 
+						2.id是调用这一条sql语句的凭证,唯一值
+						3.resultMap是返回结果集,resultType是返回类型
+							1.可以是一个对应于数据库table的自定义类。
+							2.也可以是基本类型。
+						4.如果需要返回结果集,也需要指明类型，需要添加一个<resultMap>标签,里面包含两个参数
+							1.id:是使用该结果集的凭证
+							2.resultType:结果集的类型
+						5.另外，还有parameterType,它指定了输入类型,多用于insert语句和update语句。
+						6.#{email}对应函数的参数值,使用该字符默认当作字符串来处理,如果是其他类型,可以使用${xxx}。
+				-->
+				<select id="getMemberAll"	resultType="com.bean.vObject.Member">
+					select email,userName from member;
+				</select>
+				<select id="getMember"	resultType="com.bean.vObject.Member">
+					select * from member where email=#{email};
+				</select>
+				<insert id="insertMember" parameterType="com.bean.vObject.Member">   	
+					insert into member(email,userName,password,sex,trueName,sfz,mobile) value(#{email},#{userName},#{password},#{sex},#{trueName},#{sfz},#{mobile});
+				</insert>
+				<update id="updateMember" parameterType="com.bean.vObject.Member">   	
+					update member set userName=#{userName},password=#{password},sex=#{sex},trueName=#{trueName},sfz=#{sfz},mobile=#{mobile} where email=#{email};
+				</update>
+				<delete id="deleteMember" parameterType="String">   	
+					delete from member  where email=#{email};
+				</delete>
+			</mapper>
+			#MemberUtil.class:
+			public class MemberUtil{
+				private static String resource = "database.xml";
+				private static String mapper = "bank.memberMapper";
+				public static List<Member> selectAll()//查询所有用户的email和userName属性，其他为默认值
+				{
+					
+					InputStream is = Test.class.getClassLoader().getResourceAsStream(resource);
+					SqlSessionFactory sessionFactory = new SqlSessionFactoryBuilder().build(is);
+					SqlSession session = sessionFactory.openSession();
+					String statement=mapper+".getMemberAll";
+					List<Member> list=session.selectList(statement);
+					System.out.println(list.size());
+					
+					session.close();
+					try {
+						is.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+					finally {
+						session.close();
+					}
+					System.out.println(list);
+					return list;
+				}
+				public static Member select(String email)
+				{
+					
+					InputStream is = Test.class.getClassLoader().getResourceAsStream(resource);
+					SqlSessionFactory sessionFactory = new SqlSessionFactoryBuilder().build(is);
+					SqlSession session = sessionFactory.openSession();
+					String statement=mapper+".getMember";
+					Member member= session.selectOne(statement,email);
+					
+					session.close();
+					try {
+						is.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+					finally {
+						session.close();
+					}
+					System.out.println(member);
+					return member;
+				}
+				public static void insert(Member member)
+				{
+					InputStream is = Test.class.getClassLoader().getResourceAsStream(resource);
+					SqlSessionFactory sessionFactory = new SqlSessionFactoryBuilder().build(is);
+					SqlSession session = sessionFactory.openSession();
+					String statement=mapper+".insertMember";
+					session.insert(statement, member);
+					session.commit();
+					session.close();
+					try {
+						is.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+					finally {
+						session.close();
+					}
+				}
+				public static int update(Member member)
+				{
+					InputStream is = Test.class.getClassLoader().getResourceAsStream(resource);
+					SqlSessionFactory sessionFactory = new SqlSessionFactoryBuilder().build(is);
+					SqlSession session = sessionFactory.openSession();
+					String statement=mapper+".updateMember";
+					int i=session.update(statement, member);
+					session.commit();
+					session.close();
+					try {
+						is.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+					finally {
+						session.close();
+					}
+					return i;
+				}
+				public static int delete(String email)
+				{
+					InputStream is = Test.class.getClassLoader().getResourceAsStream(resource);
+					SqlSessionFactory sessionFactory = new SqlSessionFactoryBuilder().build(is);
+					SqlSession session = sessionFactory.openSession();
+					String statement=mapper+".deleteMember";
+					int i=session.delete(statement, email);
+					session.commit();
+					session.close();
+					try {
+						is.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+					finally {
+						session.close();
+					}
+					return i;
+				}
+			}
+			#如果要分页的话，Util可以这么写：
+			public static List<RecordView> selectByCardIDAccordingToPage(String cardID,int start,int perPageNum)
+			｛
+				//...
+				List<RecordView> recordViewList= session.selectList(statement,cardID,new RowBounds(start,perPageNum));
+				//...
+			｝
+		4、单浏览器登录，强制登出：
+			web.xml:
+				<listener>
+					<listener-class>com.listener.LoginListenner</listener-class>
+				</listener>
+			LoginListenner.class:
+				public class LoginListenner implements HttpSessionAttributeListener{
+					@Override
+					public void attributeAdded(HttpSessionBindingEvent event) {//当一个session新增一个attribute时执行，修改不执行。
+						//System.out.println("监听器监听到session条目添加！");
+						String	name = event.getName();//setAttribute里面的name值(第一个参数)
+						Map<String,HttpSession> map=MemberSession.getMap();
+						if (name.equals("loginMember")) {
+
+							Member user = (Member) event.getValue();//setAttribute里面的value值(第二个参数)
+							String userEmail=user.getEmail();
+							System.out.println("Added:userEmail->"+userEmail);
+							if (map.get(userEmail) != null) {
+								System.out.println(userEmail+"被强制登出！");
+								HttpSession session = map.get(userEmail);//找到这个账号之前的session
+								session.removeAttribute("memberLogin");//将这个session的memberLogin移除出去。
+								session.invalidate();//销毁该session对象
+							}
+							System.out.println("用户列表新增一个成员！");
+							map.put(user.getEmail(), event.getSession());
+						}
+					}
+					@Override
+					public void attributeRemoved(HttpSessionBindingEvent event) {//session.setAttribute("xxx", null);时执行
+				//		System.out.println("监听器监听到session条目删除！");
+						String name = event.getName();
+						Map<String,HttpSession> map=MemberSession.getMap();
+						if (name.equals("loginMember")) {
+							Member user = (Member) event.getValue();
+							String userEmail=user.getEmail();
+							System.out.println("Removed:userEmail->"+userEmail);
+							System.out.println("用户列表去除一个成员！");
+							map.remove(userEmail);
+				 
+						}
+					}
+					@Override
+					public void attributeReplaced(HttpSessionBindingEvent event) {
+						// TODO Auto-generated method stub
+					}
+
+				}
+			#MemberSession.class
+			public class MemberSession {//用户列表，实在不知道应该放在哪个包里面，只能放service里了。
+				private static Map<String, HttpSession> map = new HashMap<String, HttpSession>();
+				
+				public static Map<String, HttpSession> getMap() {
+					return map;
+				}
+	
+			}
+		5、自动登录：
+			@RequestMapping("index")//进入真主页
+			public String index(HttpSession httpSession,HttpServletRequest request)
+			{
+				if(httpSession.getAttribute("loginMember")==null)//如果用户没有登录
+				{
+					for(Cookie cookie :request.getCookies())//那就寻找cookies看是否有email的值
+					{
+						if(cookie.getName().equals("email"))//如果有，就帮你登录
+						{
+							String email=cookie.getValue();
+							Member loginMember=MemberUtil.select(email);	
+							httpSession.setAttribute("loginMember", loginMember);
+							break;
+						}
+					}
+				}
+				System.out.println("sessionID:"+httpSession.getId());
+				System.out.println("session:"+httpSession.toString());
+				//返回到根目录的页面
+				return "index";
+			}
+			@RequestMapping("doLogin")//点击登录按钮
+			public ModelAndView doLogin(String email,String password,String autoLogin,HttpSession httpSession,HttpServletResponse response)
+			{
+				ModelMap modelMap=new ModelMap();
+				Member loginMember=MemberUtil.select(email);	
+				modelMap.put("loginMember", loginMember);
+				if(loginMember==null)
+				{
+					System.out.println("账号为空");
+					//页面重定向
+					return new ModelAndView("redirect:notFound.do");
+				}
+				else if(!loginMember.getPassword().equals(password))
+				{
+					System.out.println("密码错误");
+					//页面重定向
+					return new ModelAndView("redirect:pwWrong.do");
+				}
+				else 
+				{
+					Cookie emailCookie;
+					if(autoLogin==null)	{autoLogin="";}
+					if(autoLogin.equals("true"))//如果自动登陆打了勾，这里会接收到true，这时候就将email写入cookie
+					{
+						emailCookie=new Cookie("email", email);	
+						emailCookie.setMaxAge(60 * 60 * 24 * 3);//设置cookie的有效时长为3天，如果不设置，cookie的会在网页关闭以后失效。
+					}
+					else 
+					{		
+						emailCookie=new Cookie("email", null);	
+						emailCookie.setMaxAge(0);//设置cookie的有效时长为0
+					}
+					response.addCookie(emailCookie);//将cookie数据通过response发送到网页
+					//将用户对象传入到session中，便于检测是否已经登录
+					httpSession.setAttribute("loginMember", loginMember);
+					//账号和密码都正确时，返回到index页面
+					return new ModelAndView("redirect:index.do");
+				}
+					
+			}

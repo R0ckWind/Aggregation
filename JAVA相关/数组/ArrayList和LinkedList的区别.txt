@@ -1,0 +1,115 @@
+#ArrayList和LinkedList的区别
+ArrayList的实现是基于数组来实现的，LinkedList的基于双向链表来实现。这两个数据结构的逻辑关系是不一样，当然物理存储的方式也会是不一样。 
+
+2. LinkedList比ArrayList更占内存，因为LinkedList的节点除了存储数据，还存储了两个引用，一个指向前一个元素，一个指向后一个元素。
+
+3. 对于随机访问，ArrayList要优于LinkedList。
+4. 对于插入和删除操作，LinkedList优于ArrayList（理论上），实际并非如此（实际上ArrayList不论是插入还是删除效率，在元素数量趋多时，都是要优于LinkedList的），因这其中涉及数组与链表在元素操作方式、时间与空间上的复杂度计算问题，所以具体问题须具体分析和佐证。
+5. 两者都支持插入空值
+	#ArrayList：
+		插入逻辑：
+		public boolean add(E e) {
+			ensureCapacityInternal(size + 1);  // Increments modCount!!
+			elementData[size++] = e;
+			return true;
+		}
+		public void add(int index, E element) {
+			rangeCheckForAdd(index);//检查index是否合法
+
+			ensureCapacityInternal(size + 1);  // Increments modCount!!
+			System.arraycopy(elementData, index, elementData, index + 1,
+							 size - index);
+			elementData[index] = element;
+			size++;
+		}
+		扩容逻辑：
+		 private void ensureCapacityInternal(int minCapacity) {
+			ensureExplicitCapacity(calculateCapacity(elementData, minCapacity));
+		}
+
+		private void ensureExplicitCapacity(int minCapacity) {
+			modCount++;
+
+			// overflow-conscious code
+			if (minCapacity - elementData.length > 0)
+				grow(minCapacity);
+		}
+		private void grow(int minCapacity) {
+			// overflow-conscious code
+			int oldCapacity = elementData.length;
+			int newCapacity = oldCapacity + (oldCapacity >> 1);
+			if (newCapacity - minCapacity < 0)
+				newCapacity = minCapacity;
+			if (newCapacity - MAX_ARRAY_SIZE > 0)
+				newCapacity = hugeCapacity(minCapacity);
+			// minCapacity is usually close to size, so this is a win:
+			elementData = Arrays.copyOf(elementData, newCapacity);
+		}
+		删除逻辑：
+		public E remove(int index) {
+			rangeCheck(index);
+
+			modCount++;
+			E oldValue = elementData(index);
+
+			int numMoved = size - index - 1;
+			if (numMoved > 0)
+				System.arraycopy(elementData, index+1, elementData, index,
+								 numMoved);
+			elementData[--size] = null; // clear to let GC do its work
+
+			return oldValue;
+		}
+		public boolean remove(Object o) {
+			if (o == null) {
+				for (int index = 0; index < size; index++)
+					if (elementData[index] == null) {
+						fastRemove(index);
+						return true;
+					}
+			} else {
+				for (int index = 0; index < size; index++)
+					if (o.equals(elementData[index])) {
+						fastRemove(index);
+						return true;
+					}
+			}
+			return false;
+		}
+	#LinkedList
+		节点：
+		  private static class Node<E> {
+				E item;
+				Node<E> next;
+				Node<E> prev;
+
+				Node(Node<E> prev, E element, Node<E> next) {
+					this.item = element;
+					this.next = next;
+					this.prev = prev;
+				}
+		}
+		插入逻辑：
+		public boolean add(E e) {
+				linkLast(e);
+				return true;
+			}	
+		删除逻辑：	
+		public boolean remove(Object o) {
+				if (o == null) {
+					for (Node<E> x = first; x != null; x = x.next) {
+						if (x.item == null) {
+							unlink(x);
+							return true;
+						}
+					}
+				} else {
+					for (Node<E> x = first; x != null; x = x.next) {
+						if (o.equals(x.item)) {
+							unlink(x);
+							return true;
+						}
+					}
+				}
+				return false;
+			}

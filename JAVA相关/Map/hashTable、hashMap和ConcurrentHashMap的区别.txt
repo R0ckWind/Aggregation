@@ -1,0 +1,30 @@
+#hashTable、hashMap和ConcurrentHashMap的区别
+
+1、HashTable
+底层数组+链表实现，无论key还是value都不能为null，线程安全，实现线程安全的方式是在修改数据时锁住整个HashTable，效率低。
+HashTable的初始size为11，扩容：newsize = olesize*2+1
+计算index的方法：index = (key.hashCode()& 0x7FFFFFFF) % tab.length
+其中 0x7FFFFFFF =2^31-1 （也就是int的最大值）
+
+2、HashMap
+底层数组+链表实现，如果节点超过8，将改为红黑树。
+可以存储null键和null值，线程不安全
+初始size为16，扩容：newsize = oldsize*2，size一定为2的n次幂。
+扩容针对整个Map，每次扩容时，原来数组中的元素依次重新计算存放位置，并重新插入
+插入元素后才判断该不该扩容，有可能无效扩容（插入后如果扩容，如果没有再次插入，就会产生无效扩容）
+当Map中元素总数超过Entry数组的75%，触发扩容操作，为了减少链表长度，元素分配更均匀
+计算index方法：index = hash & (tab.length – 1)
+之所以要是2的n次幂，是因为2的n次幂-1会有连续n个1，进行“与”操作的结果只由hash值决定，因此使得元素分配的更加的平均
+
+3、ConcurrentHashMap
+底层采用分段的数组+链表实现，线程安全
+通过把整个Map分为N个Segment，可以提供相同的线程安全，但是效率提升N倍，默认提升16倍。(读操作不加锁，由于HashEntry的value变量是 volatile的，也能保证读取到最新的值。)
+Hashtable的synchronized是针对整张Hash表的，即每次锁住整张表让线程独占，ConcurrentHashMap允许多个修改操作并发进行，其关键在于使用了锁分离技术
+有些方法需要跨段，比如size()和containsValue()，它们可能需要锁定整个表而而不仅仅是某个段，这需要按顺序锁定所有段，操作完毕后，又按顺序释放所有段的锁
+扩容：段内扩容（段内元素超过该段对应Entry数组长度的75%触发扩容，不会对整个Map进行扩容），插入前检测需不需要扩容，有效避免无效扩容
+
+锁分段技术：首先将数据分成一段一段的存储，然后给每一段数据配一把锁，当一个线程占用锁访问其中一个段数据的时候，其他段的数据也能被其他线程访问。 
+ConcurrentHashMap提供了与Hashtable和SynchronizedMap不同的锁机制。Hashtable中采用的锁机制是一次锁住整个hash表，从而在同一时刻只能由一个线程对其进行操作；而ConcurrentHashMap中则是一次锁住一个桶。
+ConcurrentHashMap默认将hash表分为16个桶，诸如get、put、remove等常用操作只锁住当前需要用到的桶。这样，原来只能一个线程进入，现在却能同时有16个写线程执行，并发性能的提升是显而易见的。
+
+https://www.cnblogs.com/heyonggang/p/9112731.html

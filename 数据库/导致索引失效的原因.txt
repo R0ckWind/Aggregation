@@ -1,0 +1,28 @@
+1、单独引用复合索引里非第一位置的索引列
+假如有INDEX(a,b,c)，
+当条件为a或a,b或a,b,c时都可以使用索引，
+但是当条件为b,c时将不会使用索引。
+复合索引遵守“最左前缀”原则，即在查询条件中使用了复合索引的第一个字段，索引才会被使用。因此，在复合索引中索引列的顺序至关重要。如果不是按照索引的最左列开始查找，则无法使用索引。
+
+2、对索引列运算，运算包括（+、-、*、/、！、<>、%、like’%_’（%放在前面）、or、in、exist等），导致索引失效。
+错误的例子：select * from test where id-1=9;
+正确的例子：select * from test where id=10;
+
+注意：mysql中如果使用了not_in、not_exists，（<>不等于！=）这些不走。小于、小于等于、大于、大于等于这个根据实际查询数据来判断，如果全盘扫描速度比索引速度要快则不走索引 。
+
+3.对索引应用内部函数，这种情况下应该建立基于函数的索引。
+select * from template t where ROUND(t.logicdb_id) = 1
+此时应该建ROUND(t.logicdb_id)为索引。
+
+4、类型错误，如字段类型为varchar，where条件用number。
+
+例：template_id字段是varchar类型。
+错误写法：select * from template t where t.template_id = 1
+正确写法：select * from template t where t.template_id = ‘1’
+
+5.如果MySQL预计使用全表扫描要比使用索引快，则不使用索引
+
+6.like的模糊查询以%开头，索引失效
+
+7.索引列没有限制not_null，索引不存储空值，如果不限制索引列是not_null，oracle会认为索引列有可能存在空值，所以不会按照索引计算
+https://blog.csdn.net/hehexiaoxia/article/details/54312130

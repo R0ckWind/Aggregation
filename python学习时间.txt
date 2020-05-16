@@ -1,0 +1,254 @@
+1、输入和输出
+    输出是print()
+    1)字符串连接可以用+号，也可以用,号。逗号会输出一个空格。即print('a','b')=a b|print('a'+'b')=ab
+    输入是input()
+    1)a=input()#即将输入的值赋给a
+    2)如果要添加输入提示，可以a=input('请输入a的值\n')
+2、数据类型
+    1)整数（二进制0b开头，八进制0o开头，十六进制0x开头）
+    2)浮点数1.23e9、1.2e-5
+    3)字符串：转义字符（\n,\t,\\,\',\"）
+	如果不想默认转义，可以用r修饰，即print(r'\\\t\\')但是'或者"还是必须唯二
+    4)布尔值
+    5)空值None(python没有null)
+    6)变量：python是一门动态语言，即变量本身类型不固定，相反java则是静态语言。
+    7)常量：PI=3.1415#在Python中，通常用全部大写的变量名表示常量,但事实上PI仍然是一个变量，Python根本没有任何机制保证PI不会被改变。
+3、除法：python的除法有三种，这三种对整数而言都是精确的。
+	1）普通除法：10/3=3.333333#该除法得到的值是浮点数类型的（即便它是个整数的解）
+	2）整除：10//3=3#结果向下取整。(所以python的注释是#而不是//)（整除不意味着除数和被除数就一定要是整数了，12//2.5=4）
+	3）求余：10%3=1
+	（三种除法除数都不能为0，除数和被除数都只能为数字：整数、小数都行）
+4、编码
+    1）ASCII编码是1个字节的，最早只有127个字符，也就是大小写英文字母、数字和一些符号。弊端就是无法表示非拉丁字母文字。
+    2）Unicode把所有语言都统一到一套编码里，最常用的是用两个字节表示一个字符。弊端就是，假如一个文本是全英文的话，那所占用的存储空间就比ASCII编码多一倍。
+    3）UTF-8是“可变长编码”的，即每一个字符所占用的字节数不同，英文字母一般是1个字节，常用汉字为3个字节。如果你要传输的文本包含大量英文字符，用UTF-8编码就能节省空间，同时，还可以把ASCII编码看成是UTF-8编码的一部分。
+三者间的关系：在计算机内存中，统一使用Unicode编码，当需要保存到硬盘或者需要传输的时候，就转换为UTF-8编码。
+用记事本编辑的时候，从文件读取的UTF-8字符被转换为Unicode字符到内存里，编辑完成后，保存的时候再把Unicode转换为UTF-8保存到文件。
+5、字符串
+    1）字符串用b前缀修饰，可以转化成bytes类型。
+    2）str.encode('utf-8'|'ascii')函数可以讲str转化成指定编码的bytes。
+    3）bytes.decode('utf-8'|'ascii)函数可以将bytes用指定编码解析成str。
+    4）len('qwe')可以求取字符串的长度(字符数)，如果是len(b'qwe')则求的实时bytes的字节数（两者的区别在于，一个中文的字符数是1，字节数是3）
+    5） 'Hi, %s, you have $%d.' % ('Michael', 1000000)#格式化字符串（%d：整数，%f：浮点数，%s：字符串，%x：十六进制整数）
+6、list：是一种有序的集合，可以随时添加和删除其中的元素。
+    1）定义方式：classmates = ['Michael', 'Bob', 'Tracy']
+    2）访问方式：classmates[2]>>>'Tracy'
+    3）如果访问的下标是负数，则表示访问倒数第几个元素：classmates[-1]>>>'Tracy'#访问倒数第一个的元素
+    4）元素的插入：
+	1.从末尾添加：classmates.append('Adam')
+	2.插入到指定位置：classmates.insert(1, 'Jack')#插入到位置1，其他元素延后
+	3.删除元素：classmates.pop()#删除末尾的元素。
+		   classmates.pop(n)#删除指定位置的元素。
+	4.替换元素：classmates[1] = 'Sarah'
+	5.list中的每个元素可以使不同的数据类型，包括list嵌套list。
+	6.list的长度求取：len(classmates)
+7、tuple：和list非常类似，但是tuple一旦初始化就不能修改
+    1）定义方式：classmates = ('Michael', 'Bob', 'Tracy')#注意这里是圆括号而list是方括号
+    2）增删修改：没有append()，insert()，pop()这样的方法，classmates[0]='happy'也是不合法的。
+    3）定义一个只有一个元素的tuple：要写成t=(1,)而不能写成t=(1)#原因是python会认为(1)就是1本身，这里的括号不过只是数学符号罢了。所以规定添加逗号来消除歧义。
+    4）但是如果tuple上含有list，list内的值依然可变。t = ('a', 'b', ['A', 'B'])    t[2][0] = 'X'#是可以的。
+8、条件判断
+age = 3
+if age>=60:
+    print('your age is', age)
+    print('elderly man')
+elif age >= 18:
+    print('your age is', age)
+    print('adult')
+else:#注意if和else后面都要跟着冒号“：”
+    print('your age is', age)
+    print('teenager')
+如果if语句判断是True，就把缩进的两行print语句执行了，否则，就执行else语句的内容。
+###
+if判断条件还可以简写为：if x：#只要x是非零数值、非空字符串、非空list等，就判断为True，否则为False。
+字符串和数值之间不能进行比较，否则会报错。方法input()输入的类型为字符串，所以要和整数进行比较的时候，需要进行转换。
+s = input('birth: ')
+birth = int(s)#通过int(str)可以将数值型字符串转换成整数类型
+if birth < 2000:
+    print('00前')
+else:
+    print('00后')
+9、循环
+    1）for循环：
+	names = ['Michael', 'Bob', 'Tracy']
+	for name in names:
+    	    print(name)
+	也可以写成
+	sum = 0
+	for x in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]:
+    	    sum = sum + x
+	    print(sum)
+	如果你需要一个从1-100的等差序列，可以通过函数range(start,end,step)去实现（返回的类型并不是一个列表，但可以外嵌一个list()转化为list类型）。
+	所以需要>>>lists=list(range(5)) >>>for item in lists
+	但是这样却又是允许的：for x in range(101):#只写一个参数代表着从0开始	，数101个数。也就是0-100
+    2）while循环：
+	n = 1
+	while n <= 100:
+    	    print(n)
+    	    n = n + 1
+	print('END')
+    3）循环控制：continue、break
+10、集合类
+    1）dict：dict全称dictionary，也就是java中的map，使用键-值（key-value）存储，具有极快的查找速度。
+	###之所以dict能有这么快的查询速度，是因为用户给定一个名字，比如'Michael'，dict在内部就可以直接计算出Michael对应的存放成绩的“页码”（散列码），也就是95这个数字存放的内存地址，直接取出来。###
+	#定义方法：d = {'Michael': 95, 'Bob': 75, 'Tracy': 85}
+	#读取方法：need=d['Michael']或者need=d.get('Thomas')#两者的区别在于，如果key不存在的话，前者会报错，而后者则会返回None。
+	#写入方法：d['Tom']=88#也可用作修改
+	#判断key是否存在：'Thomas' in d#存在则会返回Ture，否则返回False
+	#删除一个元素：d.pop('Bob')
+	和list比较，dict有以下几个特点：
+	    a）查找和插入的速度极快，不会随着key的增加而变慢；
+	    b）需要占用大量的内存，内存浪费多。
+    2）set：set和dict类似，也是一组key的集合，但不存储value。由于key不能重复，所以，在set中，没有重复的key。
+	###set是一个无序的不重复元素序列
+	#定义方法：s=set([1,2,3,4,5])#方括号括起来的是list，通过set()方法转化成set集合，set()不仅可以填list、还可以填tuple和dict。如果有重复元素，会被自动过滤，dict里面只存map的值。
+	#读取方法：set中不支持索引操作（即不可以读取单个值），但是你可以转化为list再读取。当然整个读取是没问题的。
+	#写入方法：s.add(6)
+	#判断key是否存在：'Thomas' in d#存在则会返回Ture，否则返回False
+	#删除一个元素：
+	    s.remove(4)#删除制定元素 
+	    s.pop()#删除set的散列表中的第一个(还是最后一个)元素
+11、函数
+    1）定义函数：
+    def function(x):
+        if x > 0:
+            return x
+        else:
+            return -x
+    2)pass:可以用来作为占位符，定义空函数或者空执行，用来表示还没有想好的内容，让程序能够运行起来。
+    def function():
+        pass#空函数定义
+    if x > 5
+        pass#空执行
+    3)参数检查：由于python是一门动态语言，所以，理论上任何的参数类型都可以进入到函数体中。但是由于函数中的语句本身并不一定能够被所有类型所执行，所以可能当传入不适合的类型是，会出现报错。为了让用户知晓错误是由于不恰当的参数类型所致，python加入了值传递功能。
+def my_abs(x):
+    if not isinstance(x, (int, float)):#如果传入了类型不是int或者float的话，就会报出TypeError: bad operand type的错误。
+        raise TypeError('bad operand type')
+    if x >= 0:
+        return x
+    else:
+        return -x
+    4)返回多参数:说出来你可能不信，python函数的返回值可以有多个。
+def swap(a,b):
+    c = a
+    a = b
+    b = c
+    return a, b#虽然确实是返回了两个值，但其实只是返回了一个tuple。定义tuple时可以省略括号。
+     5)如果函数执行到最后都没有return的话，会自动return None值。
+     6)python的函数没有函数重载，因为它支持C++的默认参数
+	def function(a,b,c=5)
+	    return a*b*c
+	#但是，默认参数的值，在Python函数定义的时候就被计算出来了，所以当他指向的是一个地址的时候，比如是一个空的list（即[]），这个list会随着函数的多次调用而变动(不再为空)。这就造成了危险。
+    7)函数也可可以接受变长参数，写法是这样：
+	def calc(*numbers):
+   	 sum = 0
+    	for n in numbers:
+        	sum = sum + n * n
+    	return sum#调用时可以calc(1, 2)，实际上numbers会被认为是tuple来处理。	
+	#而如果你现在有一个list或者tuple，比如说lis=[1,3,5]，那你可以采用两种方式来调用该方法：calc(lis[0],lis[1],lis[2])或者calc(*lis)
+    8)关键字参数：关键字参数允许你传入0个或任意个含参数名的参数，这些关键字参数在函数内部自动组装为一个dict。
+    def person(name, age, **kw):
+        print('name:', name, 'age:', age, 'other:', kw)
+    #第一种使用方式
+    person('Adam', 45, gender='M', job='Engineer')
+    #第二种使用方式
+    extra = {'city': 'Beijing', 'job': 'Engineer'}
+    person('Jack', 24, city=extra['city'], job=extra['job'])
+    #第三种使用方式
+    extra = {'city': 'Beijing', 'job': 'Engineer'}
+    person('Jack', 24, **extra)
+    #可以通过in语句来判断在调用的时候是否传入了该参数
+    def person(name, age, **kw):
+         if 'city' in kw:
+            # 有city参数
+            pass
+        if 'job' in kw:
+            # 有job参数
+            pass
+        print('name:', name, 'age:', age, 'other:', kw)
+12、切片操作：取list中的部分元素构成一个新的list
+    L = ['Machine', 'Sarah', 'Tracy', 'Bob', 'Jack']
+    L2=L[0:3]#选取[0,3）的元素构成一个新的list>>>['Machine', 'Sarah', 'Tracy']
+    L2=L[:3]#选取从第一个元素到3这个索引的前一个元素>>>['Machine', 'Sarah', 'Tracy']
+    L2=L[3:]#选取从3这个索引开始到最后一个元素>>>['Bob', 'Jack']
+    L2=L[-3:-1]#从倒数第三个元素到倒数第一个元素的前一个元素>>>['Tracy', 'Bob']
+    L2=L[::2]#从头到尾间隔2个元素获取>>>['Machine', 'Tracy', 'Jack']
+    L2=L[::-1]#将list倒转>>>['Jack', 'Bob', 'Tracy', 'Sarah', 'Machine']
+    L2=L[:]#复制list，修改L2的局部不会影响到L（但是如果用L2=L则会影响）
+    切片操作也支持tuple和字符串
+13、迭代
+    python可以通过for来实现迭代，不但可以作用在list和tuple之上，还能作用于dict等任何可迭代的对象上。
+d = {'a': 1, 'b': 2, 'c': 3}
+for key in d:
+    print(key)
+#默认的情况下，dict迭代的是key，如果需要迭代value的话，可以使用for value in d.values():
+#同时迭代key和value，可以通过for k, v in d.items():
+    判断对象是否可迭代，可通过collections模块的Iterable类型判断：
+    from collections import Iterable
+    isinstance('abc', Iterable) # 判断str是否可迭代，结果为true
+    #其中Iterable
+#如果在迭代元素的同时，还需要获取其下标，可以使用python内置方法：
+for i, value in enumerate(['A', 'B', 'C']):
+    print(i, value)#其中i为下标，value是值
+14、列表生成式：
+    L = []
+    for x in range(1, 11):
+        L.append(x * x)
+    print(L)#生成一个从1*1,2*2,3*3，......，9*9,10*10的列表
+    这样太过繁琐，所以采用列表生成式，可简写为：
+    L=[x * x for x in range(1, 11)]
+    #可以在后面添加if语句：
+    [x * x for x in range(1, 11) if x % 2 == 0]
+    #可以采用双重循环：
+    [m + n for m in 'ABC' for n in 'XYZ']#结果为['AX', 'AY', 'AZ', 'BX', 'BY', 'BZ', 'CX', 'CY', 'CZ']
+    #还可以使用两个变量：
+    d = {'x': 'A', 'y': 'B', 'z': 'C' }
+    [k + '=' + v for k, v in d.items()] #结果为：['y=B', 'x=A', 'z=C']
+15、生成器generator：如果要创建一个有规律的列表，可以通过列表生成式，但是这样做可能会占用很大的存储空间，所以，我们可以将算法保存，并在循环的过程中不断的推算出后续的元素，这就避免了大量的占用空间，这种机制，称为生成器。
+	第一种创建generator的方法：
+	g = (x * x for x in range(10))#它和列表生成式的区别在于，它的最外层是()而列表生成式最外层是[]
+	第二种创建方法：
+	def fib(max):
+    	    n, a, b = 0, 0, 1
+    	    while n < max:
+       	        yield b#这是generator的特殊语法，有这行语句，代表着这个函数是一个生成器generator
+       	        a, b = b, a + b
+        	        n = n + 1
+	#a, b = b, a + b可以看作是先让一个临时的tuple等于(b，a+b)，然后在让a和b分别附上tuple[0]和tuple[1]，也就是说，b和a+b操作是针对原来的值进行的，操作没有先后之分。
+	采用f=fig(10)可以获得这个generator。
+	打印一个generator，它的结果是一个generator对象>>>    <generator object fib at 0x00000220B431B448>
+	可以通过next(g)函数获得generator的下一个返回值
+	用函数的行驶生成的generator，它会从开始计算知道碰到一个yield。并将yield紧跟着的元素作为返回值，下一次next的时候，就会从这个yield开始执行，直到碰到下一个yield。当所有yield都被执行的时候，再进行next，将会报错。generator的正常调用不会得到return返回值，但遇到return函数依然会结束，返回值最终会出现在StopIteration错误的末尾。
+	可以通过for的方式来遍历这个generator，这种方式不会因为越界的问题而出现报错。
+	for n in g:
+	     print(n)
+16、这些可以直接作用于for循环的对象统称为可迭代对象：Iterable#可通过isinstance(something, Iterable)
+       可以被next()函数调用并不断返回下一个值的对象称为迭代器：Iterator。#可通过isinstance(something, Iterator)
+       生成器都是Iterator对象，但list、dict、str虽然是Iterable，却不是Iterator。
+       把list、dict、str等Iterable变成Iterator可以使用iter()函数：
+       list2=iter(list)
+       Iterator对象表示的是一个数据流，Iterator对象可以被next()函数调用并不断返回下一个数据，直到没有数据时抛出StopIteration错误。可以把这个数据流看做是一个有序序列，但我们却不能提前知道序列的长度，只能不断通过next()函数实现按需计算下一个数据，所以Iterator的计算是惰性的，只有在需要返回下一个数据时它才会计算。
+       所以，Iterator可以表示一个无限大的数据流，例如全体自然数。而使用list是永远不可能存储全体自然数的。
+17、高阶函数：
+    1、一个函数也是一个变量：如果你调用abs(-10)得到的结果是10，但如果print(abs)，那结果将是函数本身<built-in function abs>。
+	于是乎，如果我们用一个变量来接收一个函数本身，即f=abs，那f也将成为函数，并且可以通过f(-10)得到结果为10的返回值。
+ 	既然如此，那也就是说，我们可以把函数作为参数，传入到一个新的函数中，这个新的函数，就是所谓的高阶函数：
+	def add(x, y, f):
+    	    return f(x) + f(y)#其中f是一个函数
+	如果调用(-5,6,abs),实际上执行的语句将是abs(-5)+abs(6)
+    2、map()函数：map()函数接收两个参数，一个是函数，一个是Iterable，map将传入的函数依次作用到序列的每个元素，并把结果作为新的Iterator返回。(因为返回的是一个Iterator，是一个惰性序列，所以需要用list()函数获得所有结果并返回list)
+>>> def f(x):
+...     return x * x
+...
+>>> r = map(f, [1, 2, 3, 4, 5, 6, 7, 8, 9])
+>>> list(r)#结果是[1, 4, 9, 16, 25, 36, 49, 64, 81]
+
+    3、reduce()函数:reduce把一个函数作用在一个序列[x1, x2, x3, ...]上，这个函数必须接收两个参数，reduce把结果继续和序列的下一个元素做累积计算：
+>>> from functools import reduce
+>>> def add(x, y):
+...     return x + y
+...
+>>> reduce(add, [1, 3, 5, 7, 9])#结果是25
+
+	
+	

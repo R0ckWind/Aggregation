@@ -1,0 +1,13 @@
+String 的底层实现是依靠 char[] 数组	。
+public final class String
+    implements java.io.Serializable, Comparable<String>, CharSequence {
+    /** The value is used for character storage. */
+    private final char value[];
+由于String本身是final类，所以String类无法被继承。
+同时由于value数组也被final修饰，所以字符串无法被修改，只能重新创建。
+
+String的拼接是通过临时创建StringBuilder来实现的。
+
+String s1 = "a";
+String s2 = "b";
+String s3 = s1 + s2; // 等效于 String s3 = (new StringBuilder(s1)).append(s2).toString();

@@ -1,0 +1,23 @@
+服务导向架构(Service-Oriented Architecture，SOA)
+SOA主张「程序开发技术」与「程序建构方法」的交替并用，以类似通讯沟通的作法，将数个所需的「业务服务」进行链接，以此来实现一个新的应用程序，而非「从头开发」。透过适当的程序组构及通讯式的程序链接，可让学校或企业快速因应学生或用户的需求与改变，新的应用程序只要透过「通讯微调」即可实现，而非「重新撰写」。
+SOA不单只是程序开发的方法论，也提供行政管理层面的依循。例如它并非是以应用程序个体为角度来进行管理，而是直接将过往程序员开发出的程序视为「服务」来管理。而对「服务」间的「互动通讯」进行分析，SOA便可让程序设计部门的主管了解何时该执行哪个业务逻辑，以及为何要执行，如此信息管理者与分析师便可对服务程序进行优化调适。
+
+
+wsimport -s C:\Users\RockWind\Desktop\实作workspace\workspace\MyWebService\src -p client -keep http://localhost:9091/Service/MyWebService?wsdl
+
+
+B->A
+B->C
+A->C
+B->A
+C->B
+C->A
+B->A
+B->C
+A->C
+A->B
+C->B
+A->C
+B->A
+B->C
+A->C
